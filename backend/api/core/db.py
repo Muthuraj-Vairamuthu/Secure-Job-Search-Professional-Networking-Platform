@@ -5,11 +5,47 @@ import secrets
 from datetime import datetime, timezone
 from functools import wraps
 from flask import request, jsonify
+from argon2 import PasswordHasher
 
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data'))
 DB_NAME = os.path.join(DATA_DIR, "secure_app.db")
 AUDIT_BLOCK_SIZE = 3
 AUDIT_BLOCK_DIFFICULTY_PREFIX = "000"
+SEEDED_ADMIN_EMAIL = "harshindia112@gmail.com"
+SEEDED_ADMIN_NAME = "Harsh India Admin"
+SEEDED_ADMIN_PASSWORD = "HarshAdmin#2026"
+_seed_password_hasher = PasswordHasher(
+    time_cost=3,
+    memory_cost=65536,
+    parallelism=4,
+    hash_len=32,
+    salt_len=16
+)
+
+
+def _ensure_seed_admin_account(conn):
+    existing = conn.execute(
+        "SELECT email FROM users WHERE email=?",
+        (SEEDED_ADMIN_EMAIL,)
+    ).fetchone()
+
+    password_hash = _seed_password_hasher.hash(SEEDED_ADMIN_PASSWORD)
+
+    if existing:
+        conn.execute(
+            """UPDATE users
+               SET name=?, role='admin', password_hash=?, is_verified=1, mfa_enabled=0,
+                   mfa_secret=NULL, failed_attempts=0, locked_until=NULL, last_mfa_window=0
+               WHERE email=?""",
+            (SEEDED_ADMIN_NAME, password_hash, SEEDED_ADMIN_EMAIL)
+        )
+    else:
+        conn.execute(
+            """INSERT INTO users
+               (email, name, password_hash, role, is_verified, mfa_enabled, mfa_secret, failed_attempts, locked_until, last_mfa_window)
+               VALUES (?, ?, ?, 'admin', 1, 0, NULL, 0, NULL, 0)""",
+            (SEEDED_ADMIN_EMAIL, SEEDED_ADMIN_NAME, password_hash)
+        )
 
 def setup_db():
     with sqlite3.connect(DB_NAME) as conn:
@@ -289,6 +325,8 @@ def setup_db():
             c.execute("ALTER TABLE sessions ADD COLUMN csrf_token TEXT NOT NULL DEFAULT ''")
         except Exception:
             pass
+
+        _ensure_seed_admin_account(conn)
 
         conn.commit()
 
