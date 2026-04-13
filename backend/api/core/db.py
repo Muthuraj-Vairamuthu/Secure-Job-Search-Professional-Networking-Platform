@@ -61,6 +61,12 @@ def setup_db():
             token_hash TEXT NOT NULL,
             expires_at TIMESTAMP NOT NULL
         )''')
+        c.execute('''CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            token_hash TEXT NOT NULL,
+            expires_at TIMESTAMP NOT NULL
+        )''')
         c.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT NOT NULL,

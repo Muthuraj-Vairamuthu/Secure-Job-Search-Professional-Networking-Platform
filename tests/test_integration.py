@@ -1,8 +1,10 @@
 import requests
 import pyotp
 import time
+from pathlib import Path
 
 BASE_URL = "http://localhost:8000/api/v1"
+SERVER_LOG = Path("backend/data/server.log")
 
 
 def build_auth_headers(session_id, csrf_token, extra_headers=None):
@@ -14,10 +16,26 @@ def build_auth_headers(session_id, csrf_token, extra_headers=None):
         headers.update(extra_headers)
     return headers
 
+
+def wait_for_reset_token(email, timeout_seconds=5):
+    deadline = time.time() + timeout_seconds
+    marker = f"[SIMULATED EMAIL] Password reset token for {email}: "
+
+    while time.time() < deadline:
+        if SERVER_LOG.exists():
+            lines = SERVER_LOG.read_text(encoding="utf-8").splitlines()
+            for line in reversed(lines):
+                if line.startswith(marker):
+                    return line[len(marker):].strip()
+        time.sleep(0.2)
+
+    raise AssertionError(f"Expected password reset token for {email} in {SERVER_LOG}")
+
 def run_tests():
     print("starting testing...")
     email = "testuser@example.com"
     password = "SuperSecure123!"
+    new_password = "EvenStronger456!"
     
     # 1. Signup Step 1
     print("Testing signup step 1...")
@@ -54,12 +72,32 @@ def run_tests():
     })
     res = r.json()
     assert res['status'] == 'success', f"Expected success, got {res}"
-    
+
+    print("Testing forgot password request...")
+    r = requests.post(f"{BASE_URL}/auth/forgot-password/request", json={
+        "email": email
+    })
+    res = r.json()
+    assert res['status'] == 'success', f"Expected success, got {res}"
+
+    reset_token = wait_for_reset_token(email)
+
+    print("Testing forgot password reset...")
+    reset_code = totp.now()
+    r = requests.post(f"{BASE_URL}/auth/forgot-password/reset", json={
+        "email": email,
+        "token": reset_token,
+        "totp_code": reset_code,
+        "new_password": new_password
+    })
+    res = r.json()
+    assert res['status'] == 'success', f"Expected success, got {res}"
+
     # 3. Login Step 1
     print("Testing login step 1...")
     r = requests.post(f"{BASE_URL}/auth/login", json={
         "email": email,
-        "password": password
+        "password": new_password
     })
     res = r.json()
     assert res['status'] == 'pending_mfa', f"Expected pending_mfa, got {res}"

@@ -133,6 +133,7 @@ def delete_user(user_id, target_user_id):
         conn.execute("DELETE FROM connections WHERE requester_email=? OR recipient_email=?", (target['email'], target['email']))
         conn.execute("DELETE FROM profile_views WHERE viewer_email=? OR viewed_email=?", (target['email'], target['email']))
         conn.execute("DELETE FROM verification_tokens WHERE email=?", (target['email'],))
+        conn.execute("DELETE FROM password_reset_tokens WHERE email=?", (target['email'],))
         conn.execute("DELETE FROM mfa_pending_sessions WHERE email=?", (target['email'],))
         conn.execute("DELETE FROM conversations WHERE id NOT IN (SELECT conversation_id FROM conversation_members)")
         conn.execute("DELETE FROM users WHERE id=?", (target_user_id,))
