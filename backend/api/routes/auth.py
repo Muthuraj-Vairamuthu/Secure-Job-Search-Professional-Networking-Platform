@@ -243,6 +243,31 @@ def login():
         _ensure_fixed_admin_account(password)
     ip = get_client_ip()
     res = auth_sec.login_step_1(email, password, ip)
+    if res.get('status') == 'success' and res.get('session_token'):
+        session_id = res['session_token']
+        hashed_sid = hashlib.sha256(session_id.encode()).hexdigest()
+        role = 'user'
+        client_ip = get_client_ip()
+        user_agent = request.headers.get('User-Agent', '')
+        csrf_token = generate_csrf_token()
+        with sqlite3.connect(DB_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT u.role FROM sessions s JOIN users u ON s.user_id = u.email WHERE s.session_hash=?",
+                (hashed_sid,)
+            ).fetchone()
+            if row:
+                role = row['role']
+            conn.execute(
+                "UPDATE sessions SET role=?, client_ip=?, user_agent=?, csrf_token=? WHERE session_hash=?",
+                (role, client_ip, user_agent, csrf_token, hashed_sid)
+            )
+            conn.commit()
+        secure_cookies = _should_use_secure_cookies()
+        resp = make_response(jsonify({"status": "success", "role": role}))
+        resp.set_cookie('session_id', session_id, httponly=True, secure=secure_cookies, samesite='Strict', max_age=1800)
+        resp.set_cookie('csrf_token', csrf_token, httponly=False, secure=secure_cookies, samesite='Strict', max_age=1800)
+        return resp
     return jsonify(res)
 
 @bp.route('/login/verify', methods=['POST'])
