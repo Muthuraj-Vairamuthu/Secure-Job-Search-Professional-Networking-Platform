@@ -108,6 +108,23 @@
         .resend-otp a:hover {
             text-decoration: underline;
         }
+
+        .password-requirements {
+            margin-top: 0.6rem;
+            padding: 0.75rem 0.9rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.82rem;
+            color: #b8b8c7;
+            line-height: 1.5;
+        }
+
+        .password-requirements strong {
+            display: block;
+            margin-bottom: 0.35rem;
+            color: #f5f5f5;
+        }
     </style>
 </head>
 
@@ -209,7 +226,12 @@
                 </div>
                 <div class="form-group">
                     <label for="reg-password">Password</label>
-                    <input type="password" id="reg-password" placeholder="Create a strong password" required>
+                    <input type="password" id="reg-password" placeholder="Create a strong password" minlength="12"
+                        aria-describedby="password-requirements" required>
+                    <div id="password-requirements" class="password-requirements">
+                        <strong>Password requirements</strong>
+                        Use 12-128 characters with at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -265,6 +287,29 @@
     <script>
         let currentMfaToken = null;
         let signupContext = null;
+        const PASSWORD_SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
+
+        function getPasswordRequirementErrors(password) {
+            const errors = [];
+
+            if (password.length < 12 || password.length > 128) {
+                errors.push('Use 12 to 128 characters.');
+            }
+            if (!/[A-Z]/.test(password)) {
+                errors.push('Add at least 1 uppercase letter.');
+            }
+            if (!/[a-z]/.test(password)) {
+                errors.push('Add at least 1 lowercase letter.');
+            }
+            if (!/\d/.test(password)) {
+                errors.push('Add at least 1 number.');
+            }
+            if (!PASSWORD_SPECIAL_CHAR_REGEX.test(password)) {
+                errors.push('Add at least 1 special character.');
+            }
+
+            return errors;
+        }
 
         // ---- Page init via query params ----
         const urlParams = new URLSearchParams(window.location.search);
@@ -435,6 +480,12 @@
             const email = document.getElementById('reg-email').value;
             const role = document.getElementById('reg-role').value;
             const password = document.getElementById('reg-password').value;
+            const passwordErrors = getPasswordRequirementErrors(password);
+
+            if (passwordErrors.length) {
+                alert('Password does not meet the requirements:\n\n- ' + passwordErrors.join('\n- '));
+                return;
+            }
 
             try {
                 const res = await fetch('/api/v1/auth/register', {
