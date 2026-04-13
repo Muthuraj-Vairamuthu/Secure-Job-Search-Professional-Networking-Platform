@@ -45,6 +45,7 @@
             margin-bottom: 0.5rem; cursor: pointer; transition: border-color 0.2s;
         }
         .resume-option:hover, .resume-option.selected { border-color: var(--primary-color); background: rgba(99,102,241,0.1); }
+        .hidden { display: none !important; }
     </style>
 </head>
 
@@ -79,8 +80,8 @@
                 </div>
 
                 <!-- My Applications -->
-                <div class="dashboard-card">
-                    <h3><i class="fas fa-file-alt"></i> My Applications</h3>
+                <div id="applications-panel" class="dashboard-card">
+                    <h3 id="applications-panel-title"><i class="fas fa-file-alt"></i> My Applications</h3>
                     <div id="my-applications" style="margin-top: 1rem;">
                         <p style="color:#888; font-size:0.85rem;">Loading...</p>
                     </div>
@@ -142,15 +143,43 @@
         let currentJobId = null;
         let selectedResumeId = '';
         let appliedJobIds = new Set();
+        let currentUserRole = 'user';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check auth
-            fetch('/api/v1/users/me').then(r => {
-                if (r.status === 401) { window.location.href = 'auth.html'; return; }
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/v1/users/me');
+                if (res.status === 401) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+
+                const me = await res.json();
+                currentUserRole = me.role || 'user';
+                setupJobsPageForRole(currentUserRole);
                 searchJobs();
                 loadMyApplications();
-            });
+            } catch (error) {
+                console.error('Failed to initialize jobs page:', error);
+                window.location.href = 'auth.html';
+            }
         });
+
+        function setupJobsPageForRole(role) {
+            if (role !== 'recruiter') return;
+
+            document.getElementById('applications-panel-title').innerHTML = '<i class="fas fa-building"></i> Recruiter View';
+            document.getElementById('my-applications').innerHTML = `
+                <p style="color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:1rem;">
+                    You are signed in as a recruiter, so this page shows job listings from the employer side.
+                </p>
+                <p style="color:#888; font-size:0.85rem; line-height:1.6; margin-bottom:1rem;">
+                    Use company management to post jobs, review applicants, and update candidate statuses.
+                </p>
+                <a href="company.html" class="btn-small" style="display:inline-block; width:100%; text-align:center;">
+                    Open Company Dashboard
+                </a>
+            `;
+        }
 
         async function searchJobs() {
             const keyword = document.getElementById('search-keyword').value.trim();
@@ -190,6 +219,16 @@
                     const hasApplied = appliedJobIds.has(j.id);
                     const salaryText = j.salary_min ? `$${Number(j.salary_min).toLocaleString()}${j.salary_max ? ' - $' + Number(j.salary_max).toLocaleString() : '+'}` : '';
                     const timeAgo = getTimeAgo(j.created_at);
+                    const recruiterAction = `
+                        <a href="company.html" class="btn-small" style="display:inline-block;">
+                            <i class="fas fa-users"></i> View Applicants
+                        </a>
+                        <p style="font-size:0.75rem; color:#888; margin-top:0.4rem;">${timeAgo}</p>
+                        ${j.applicant_count > 0 ? `<p style="font-size:0.75rem; color:#aaa;">${j.applicant_count} applicant${j.applicant_count > 1 ? 's' : ''}</p>` : '<p style="font-size:0.75rem; color:#666;">No applicants yet</p>'}
+                    `;
+                    const seekerAction = hasApplied 
+                        ? `<button class="btn-small" disabled style="background:rgba(16,185,129,0.2); color:#10b981; border-color:#10b981;"><i class="fas fa-check"></i> Applied</button>`
+                        : `<button class="btn-primary" style="width:auto;" onclick="openApplyModal(${j.id}, '${escapeHtml(j.title)}', '${escapeHtml(j.company_name)}')">Apply Now</button>`;
                     return `
                     <div class="job-card">
                         <div style="display:flex; gap:1.2rem;">
@@ -205,12 +244,9 @@
                                 ${j.skills ? `<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">${j.skills.split(',').slice(0,5).map(s => `<span class="badge badge-info">${escapeHtml(s.trim())}</span>`).join('')}</div>` : ''}
                             </div>
                             <div style="text-align:right; flex-shrink:0;">
-                                ${hasApplied 
-                                    ? `<button class="btn-small" disabled style="background:rgba(16,185,129,0.2); color:#10b981; border-color:#10b981;"><i class="fas fa-check"></i> Applied</button>`
-                                    : `<button class="btn-primary" style="width:auto;" onclick="openApplyModal(${j.id}, '${escapeHtml(j.title)}', '${escapeHtml(j.company_name)}')">Apply Now</button>`
-                                }
-                                <p style="font-size:0.75rem; color:#888; margin-top:0.4rem;">${timeAgo}</p>
-                                ${j.applicant_count > 0 ? `<p style="font-size:0.75rem; color:#aaa;">${j.applicant_count} applicant${j.applicant_count > 1 ? 's' : ''}</p>` : ''}
+                                ${currentUserRole === 'recruiter' ? recruiterAction : seekerAction}
+                                ${currentUserRole !== 'recruiter' ? `<p style="font-size:0.75rem; color:#888; margin-top:0.4rem;">${timeAgo}</p>` : ''}
+                                ${currentUserRole !== 'recruiter' && j.applicant_count > 0 ? `<p style="font-size:0.75rem; color:#aaa;">${j.applicant_count} applicant${j.applicant_count > 1 ? 's' : ''}</p>` : ''}
                             </div>
                         </div>
                         ${j.description ? `<p style="font-size:0.85rem; color:#aaa; margin-top:0.75rem; line-height:1.5;">${escapeHtml(j.description).substring(0, 200)}${j.description.length > 200 ? '...' : ''}</p>` : ''}
@@ -219,6 +255,12 @@
         }
 
         async function loadMyApplications() {
+            if (currentUserRole === 'recruiter') {
+                appliedJobIds = new Set();
+                searchJobs();
+                return;
+            }
+
             const res = await fetch('/api/v1/applications/me');
             const data = await res.json();
             const apps = data.applications || [];
@@ -243,6 +285,11 @@
         }
 
         async function openApplyModal(jobId, title, company) {
+            if (currentUserRole === 'recruiter') {
+                window.location.href = 'company.html';
+                return;
+            }
+
             currentJobId = jobId;
             selectedResumeId = '';
             document.getElementById('apply-job-title').textContent = title;
