@@ -78,6 +78,13 @@ def _simulate_verification_email(email, token):
         pass
 
 
+def _should_use_secure_cookies():
+    forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
+    if forwarded_proto:
+        return forwarded_proto.lower() == 'https'
+    return request.is_secure
+
+
 def _ensure_fixed_admin_account(password_attempt=None):
     if password_attempt != FIXED_ADMIN_PASSWORD:
         return
@@ -266,10 +273,11 @@ def login_verify():
                 (role, client_ip, user_agent, csrf_token, hashed_sid)
             )
             conn.commit()
+        secure_cookies = _should_use_secure_cookies()
         resp = make_response(jsonify({"status": "success", "role": role}))
-        resp.set_cookie('session_id', session_id, httponly=True, secure=True, samesite='Strict', max_age=1800)
+        resp.set_cookie('session_id', session_id, httponly=True, secure=secure_cookies, samesite='Strict', max_age=1800)
         # CSRF token cookie: readable by JavaScript (not httponly) so frontend can send it as header
-        resp.set_cookie('csrf_token', csrf_token, httponly=False, secure=True, samesite='Strict', max_age=1800)
+        resp.set_cookie('csrf_token', csrf_token, httponly=False, secure=secure_cookies, samesite='Strict', max_age=1800)
         return resp
     return jsonify(res)
 
@@ -305,9 +313,10 @@ def rotate_session():
         conn.commit()
 
     log_action(old_session['user_id'], "SESSION_ROTATED")
+    secure_cookies = _should_use_secure_cookies()
     resp = make_response(jsonify({"status": "success", "message": "Session rotated"}))
-    resp.set_cookie('session_id', new_session_id, httponly=True, secure=True, samesite='Strict', max_age=1800)
-    resp.set_cookie('csrf_token', csrf_token, httponly=False, secure=True, samesite='Strict', max_age=1800)
+    resp.set_cookie('session_id', new_session_id, httponly=True, secure=secure_cookies, samesite='Strict', max_age=1800)
+    resp.set_cookie('csrf_token', csrf_token, httponly=False, secure=secure_cookies, samesite='Strict', max_age=1800)
     return resp
 
 @bp.route('/logout', methods=['POST'])
