@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume & Documents - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="auth-container" style="min-height: auto; margin-top: 2rem;">
+            <div class="auth-card" style="max-width: 600px;">
+                <h2 style="margin-bottom: 0.5rem;"><i class="fas fa-file-upload"></i> Secure Resume Upload</h2>
+                <p style="color: #888; font-size: 0.9rem; margin-bottom: 2rem; text-align: center;">Your documents are
+                    encrypted using AES-256 before storage.</p>
+
+                <div style="border: 2px dashed var(--glass-border); padding: 3rem; text-align: center; border-radius: 12px; margin-bottom: 2rem; transition: border-color 0.3s;"
+                    onclick="alert('File Picker Placeholder')" id="drop-zone">
+                    <i class="fas fa-cloud-upload-alt"
+                        style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <p style="color: #fff; font-weight: 600;">Drag & Drop your resume here</p>
+                    <p style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">Supported formats: PDF, DOCX (Max
+                        5MB)</p>
+                    <button class="btn-small" style="margin-top: 1rem;">Browse Files</button>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">Stored Documents</h3>
+                    <div class="job-item">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <i class="fas fa-file-pdf" style="font-size: 1.5rem; color: var(--danger-color);"></i>
+                            <div>
+                                <h4 style="font-size: 0.95rem; margin-bottom: 0.2rem;">Resume_2026_Final.pdf</h4>
+                                <p style="font-size: 0.75rem; color: #888;">Uploaded Feb 10, 2026 • Encrypted</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-small" style="border: none; color: #fff;"
+                                title="Download (OTP Required)"><i class="fas fa-download"></i></button>
+                            <button class="btn-small" style="border: none; color: var(--danger-color);"
+                                title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="security-notice" style="justify-content: center;">
+                    <i class="fas fa-lock"></i> Only authorized recruiters can view your resume.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/script.js"></script>
+    <script>
+        window.location.replace('profile.html');
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('mouseover', () => dropZone.style.borderColor = 'var(--primary-color)');
+        dropZone.addEventListener('mouseout', () => dropZone.style.borderColor = 'var(--glass-border)');
+    </script>
+</body>
+
+</html>

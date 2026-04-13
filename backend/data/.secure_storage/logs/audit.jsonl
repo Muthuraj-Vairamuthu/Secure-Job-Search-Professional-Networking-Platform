@@ -1,0 +1,8 @@
+{"timestamp": "2026-03-02T17:12:10.274977+00:00", "event": "UPLOAD_REJECTED", "user_id": "anonymous", "reason": "invalid session"}
+{"timestamp": "2026-03-02T17:14:19.002153+00:00", "event": "UPLOAD_SUCCESS", "user_id": "testuser@example.com", "resume_id": "8be780f8fae63c90", "safe_name": "test_resume.pdf", "size_bytes": 26}
+{"timestamp": "2026-03-02T17:20:21.751124+00:00", "event": "UPLOAD_SUCCESS", "user_id": "r@gmail.com", "resume_id": "c140a12472bc63aa", "safe_name": "AnuragBhaiEngagement.pdf", "size_bytes": 1308500}
+{"timestamp": "2026-03-02T17:35:49.710538+00:00", "event": "UPLOAD_SUCCESS", "user_id": "aditya@gmail.com", "resume_id": "c83186ca15f6e8c5", "safe_name": "AnuragBhaiEngagement.pdf", "size_bytes": 1308500}
+{"timestamp": "2026-03-02T17:36:03.692833+00:00", "event": "UPLOAD_SUCCESS", "user_id": "aditya@gmail.com", "resume_id": "df7b709dc6cec98e", "safe_name": "2023050_AdityaSingh.pdf", "size_bytes": 364755}
+{"timestamp": "2026-03-02T18:00:40.465653+00:00", "event": "UPLOAD_SUCCESS", "user_id": "aditya@gmail.com", "resume_id": "444baa1a18a50658", "safe_name": "2023050_AdityaSingh.pdf", "size_bytes": 364755}
+{"timestamp": "2026-03-02T18:03:29.884513+00:00", "event": "UPLOAD_SUCCESS", "user_id": "rishita@gmail.com", "resume_id": "0a6538d40c4894e9", "safe_name": "2023050_AdityaSingh.pdf", "size_bytes": 364755}
+{"timestamp": "2026-03-31T13:36:14.548519+00:00", "event": "UPLOAD_SUCCESS", "user_id": "mrp2003002@gmail.com", "resume_id": "4a3847815b3bbef4", "safe_name": "functionalsample.pdf", "size_bytes": 98553}

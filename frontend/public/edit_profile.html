@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .edit-profile-container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.9rem;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: #a0a0a0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .section-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 1.8rem;
+            border-radius: 14px;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-card h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .password-strength {
+            margin-top: 0.4rem;
+            height: 4px;
+            border-radius: 4px;
+            background: var(--glass-border);
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        .strength-label {
+            font-size: 0.75rem;
+            margin-top: 0.3rem;
+            color: #888;
+            min-height: 1em;
+        }
+
+        .requirements {
+            margin-top: 0.6rem;
+            font-size: 0.78rem;
+            color: #888;
+            list-style: none;
+        }
+
+        .requirements li {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .requirements li .req-icon {
+            font-size: 0.7rem;
+        }
+
+        .requirements li.met {
+            color: var(--success-color);
+        }
+
+        .requirements li.unmet {
+            color: #666;
+        }
+
+        .eye-toggle {
+            position: relative;
+        }
+
+        .eye-toggle input {
+            padding-right: 2.4rem;
+        }
+
+        .eye-toggle button {
+            position: absolute;
+            right: 0.7rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .eye-toggle button:hover {
+            color: var(--primary-color);
+        }
+
+        .success-toast {
+            display: none;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+            padding: 0.8rem 1.4rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            z-index: 9999;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .divider-text {
+            text-align: center;
+            color: #666;
+            font-size: 0.82rem;
+            margin: 0.5rem 0 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="profile.html" class="active"><i class="fas fa-user-circle"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="edit-profile-container">
+
+            <!-- Page header -->
+            <div class="page-header">
+                <a class="back-btn" href="profile.html"><i class="fas fa-arrow-left"></i> Back to Profile</a>
+                <h1>Edit Profile</h1>
+            </div>
+
+            <!-- ===== Basic Info ===== -->
+            <div class="section-card">
+                <h2><i class="fas fa-user"></i> Basic Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ep-name">Full Name</label>
+                        <input type="text" id="ep-name" placeholder="Your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="ep-headline">Headline</label>
+                        <input type="text" id="ep-headline" placeholder="Software Engineer at Tech Corp">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ep-location">Location</label>
+                    <input type="text" id="ep-location" placeholder="San Francisco, CA">
+                </div>
+                <div class="form-group">
+                    <label for="ep-bio">Bio</label>
+                    <textarea id="ep-bio" rows="3" placeholder="Tell us about yourself..."
+                        style="width:100%; background:transparent; border:1px solid var(--glass-border); color:#fff; padding:0.6rem; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="ep-profile-picture-url">Profile Picture URL</label>
+                    <input type="text" id="ep-profile-picture-url" placeholder="https://example.com/avatar.png">
+                </div>
+                <div class="form-group">
+                    <label for="ep-email">Email Address <span style="font-size:0.75rem; color:#888;">(read
+                            only)</span></label>
+                    <input type="email" id="ep-email" readonly style="opacity:0.6; cursor:not-allowed;">
+                </div>
+                <button class="btn-primary" style="margin-top:0.5rem;" onclick="saveBasicInfo()">
+                    <i class="fas fa-save" style="margin-right:0.4rem;"></i>Save Basic Info
+                </button>
+            </div>
+
+            <div class="section-card">
+                <h2><i class="fas fa-briefcase"></i> Professional Details</h2>
+                <div class="form-group">
+                    <label for="ep-skills">Skills</label>
+                    <textarea id="ep-skills" rows="4" placeholder="One skill per line"
+                        style="width:100%; background:transparent; border:1px solid var(--glass-border); color:#fff; padding:0.6rem; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="ep-experience">Experience</label>
+                    <textarea id="ep-experience" rows="5" placeholder="One experience entry per line"
+                        style="width:100%; background:transparent; border:1px solid var(--glass-border); color:#fff; padding:0.6rem; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="ep-education">Education</label>
+                    <textarea id="ep-education" rows="4" placeholder="One education entry per line"
+                        style="width:100%; background:transparent; border:1px solid var(--glass-border); color:#fff; padding:0.6rem; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
+                </div>
+                <button class="btn-primary" style="margin-top:0.5rem;" onclick="saveProfessionalDetails()">
+                    <i class="fas fa-save" style="margin-right:0.4rem;"></i>Save Professional Details
+                </button>
+            </div>
+
+            <!-- ===== Change Password ===== -->
+            <div class="section-card">
+                <h2><i class="fas fa-lock"></i> Change Password</h2>
+
+                <div class="form-group">
+                    <label for="ep-current-password">Current Password</label>
+                    <div class="eye-toggle">
+                        <input type="password" id="ep-current-password" placeholder="Enter your current password">
+                        <button type="button" onclick="toggleVisibility('ep-current-password', this)"
+                            aria-label="Toggle visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="ep-totp-code">Authentication Code (TOTP)</label>
+                    <input type="text" id="ep-totp-code" placeholder="6-digit code from authenticator app">
+                </div>
+
+                <div class="divider-text"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="form-group">
+                    <label for="ep-new-password">New Password</label>
+                    <div class="eye-toggle">
+                        <input type="password" id="ep-new-password" placeholder="Create a strong password"
+                            oninput="checkStrength(this.value)">
+                        <button type="button" onclick="toggleVisibility('ep-new-password', this)"
+                            aria-label="Toggle visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="strength-bar"></div>
+                    </div>
+                    <div class="strength-label" id="strength-label"></div>
+                    <ul class="requirements" id="pw-requirements">
+                        <li id="req-len" class="unmet"><span class="req-icon">○</span> At least 8 characters</li>
+                        <li id="req-upper" class="unmet"><span class="req-icon">○</span> One uppercase letter</li>
+                        <li id="req-num" class="unmet"><span class="req-icon">○</span> One number</li>
+                        <li id="req-special" class="unmet"><span class="req-icon">○</span> One special character</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label for="ep-confirm-password">Confirm New Password</label>
+                    <div class="eye-toggle">
+                        <input type="password" id="ep-confirm-password" placeholder="Re-enter new password"
+                            oninput="checkMatch()">
+                        <button type="button" onclick="toggleVisibility('ep-confirm-password', this)"
+                            aria-label="Toggle visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="strength-label" id="match-label"></div>
+                </div>
+
+                <div class="form-group" style="margin-top: 0.5rem;">
+                    <div class="security-notice">
+                        <i class="fas fa-shield-alt"></i>
+                        Passwords are stored encrypted. You will be asked to log in again after changing.
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="margin-top: 0.5rem;" onclick="changePassword()">
+                    <i class="fas fa-key" style="margin-right:0.4rem;"></i>Update Password
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Success toast -->
+    <div class="success-toast" id="success-toast">
+        <i class="fas fa-check-circle"></i> <span id="toast-msg">Changes saved!</span>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script>
+        // ---- Password strength checker ----
+        function checkStrength(val) {
+            const bar = document.getElementById('strength-bar');
+            const label = document.getElementById('strength-label');
+
+            const checks = {
+                len: val.length >= 8,
+                upper: /[A-Z]/.test(val),
+                num: /[0-9]/.test(val),
+                special: /[^A-Za-z0-9]/.test(val)
+            };
+
+            const ids = { len: 'req-len', upper: 'req-upper', num: 'req-num', special: 'req-special' };
+            Object.entries(checks).forEach(([key, met]) => {
+                const el = document.getElementById(ids[key]);
+                el.className = met ? 'met' : 'unmet';
+                el.querySelector('.req-icon').textContent = met ? '✓' : '○';
+            });
+
+            const score = Object.values(checks).filter(Boolean).length;
+            const widths = ['0%', '25%', '50%', '75%', '100%'];
+            const colors = ['transparent', '#ef4444', '#f59e0b', '#6366f1', '#10b981'];
+            const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+            bar.style.width = widths[score];
+            bar.style.background = colors[score];
+            label.textContent = score > 0 ? labels[score] : '';
+            label.style.color = colors[score];
+
+            checkMatch();
+        }
+
+        function checkMatch() {
+            const np = document.getElementById('ep-new-password').value;
+            const cp = document.getElementById('ep-confirm-password').value;
+            const label = document.getElementById('match-label');
+            if (!cp) { label.textContent = ''; return; }
+            if (np === cp) {
+                label.textContent = '✓ Passwords match';
+                label.style.color = 'var(--success-color)';
+            } else {
+                label.textContent = '✗ Passwords do not match';
+                label.style.color = 'var(--danger-color)';
+            }
+        }
+
+        // ---- Toggle password visibility ----
+        function toggleVisibility(inputId, btn) {
+            const inp = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                inp.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
+        // ---- Load profile on page load ----
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/v1/users/me');
+                if (res.status === 401) { window.location.href = 'auth.html'; return; }
+                const data = await res.json();
+                if (data.status === 'success') {
+                    document.getElementById('ep-name').value = data.name || '';
+                    document.getElementById('ep-headline').value = data.headline || '';
+                    document.getElementById('ep-location').value = data.location || '';
+                    document.getElementById('ep-bio').value = data.bio || '';
+                    document.getElementById('ep-profile-picture-url').value = data.profile_picture_url || '';
+                    document.getElementById('ep-skills').value = (data.skills || []).join('\n');
+                    document.getElementById('ep-experience').value = (data.experience || []).join('\n');
+                    document.getElementById('ep-education').value = (data.education || []).join('\n');
+                    document.getElementById('ep-email').value = data.email || '';
+                }
+            } catch (e) { console.error('Failed to load profile', e); }
+        });
+
+        // ---- Save basic info ----
+        async function saveBasicInfo() {
+            const name = document.getElementById('ep-name').value;
+            const headline = document.getElementById('ep-headline').value;
+            const location = document.getElementById('ep-location').value;
+            const bio = document.getElementById('ep-bio').value;
+            const profilePictureUrl = document.getElementById('ep-profile-picture-url').value;
+            try {
+                const res = await fetch('/api/v1/users/me', {
+method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, headline, location, bio, profile_picture_url: profilePictureUrl })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showToast('Basic info updated!');
+                } else {
+                    alert('Update failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error.');
+            }
+        }
+
+        async function saveProfessionalDetails() {
+            const skills = document.getElementById('ep-skills').value.split('\n').map(v => v.trim()).filter(Boolean);
+            const experience = document.getElementById('ep-experience').value.split('\n').map(v => v.trim()).filter(Boolean);
+            const education = document.getElementById('ep-education').value.split('\n').map(v => v.trim()).filter(Boolean);
+
+            try {
+                const res = await fetch('/api/v1/users/me', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ skills, experience, education })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showToast('Professional details updated!');
+                } else {
+                    alert('Update failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error.');
+            }
+        }
+
+        // ---- Change password ----
+        async function changePassword() {
+            const current = document.getElementById('ep-current-password').value;
+            const newPw = document.getElementById('ep-new-password').value;
+            const confirm = document.getElementById('ep-confirm-password').value;
+            const totpCode = document.getElementById('ep-totp-code').value;
+
+            if (!current) { alert('Please enter your current password.'); return; }
+            if (!totpCode || totpCode.length !== 6) { alert('Please enter the 6-digit TOTP code.'); return; }
+            if (!newPw) { alert('Please enter a new password.'); return; }
+            if (newPw !== confirm) { alert('New passwords do not match.'); return; }
+            if (newPw.length < 8) { alert('Password must be at least 8 characters.'); return; }
+
+            try {
+                const res = await fetch('/api/v1/users/me/password', { method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        current_password: current,
+                        totp_code: totpCode,
+                        new_password: newPw
+                    })
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    // clear fields and show success
+                    document.getElementById('ep-current-password').value = '';
+                    document.getElementById('ep-totp-code').value = '';
+                    document.getElementById('ep-new-password').value = '';
+                    document.getElementById('ep-confirm-password').value = '';
+                    document.getElementById('strength-bar').style.width = '0%';
+                    document.getElementById('strength-label').textContent = '';
+                    document.getElementById('match-label').textContent = '';
+                    showToast('Password updated successfully!');
+
+                    // Usually you might redirect to login if session is invalidated, 
+                    // but according to our backend, the session continues to exist and isn't deleted.
+                } else {
+                    alert('Change Failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error with server.');
+            }
+        }
+
+        // ---- Toast helper ----
+        function showToast(msg) {
+            const toast = document.getElementById('success-toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+
+</html>

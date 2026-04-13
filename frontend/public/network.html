@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Network - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .graph-container {
+            height: 350px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-node {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .graph-node:hover {
+            transform: scale(1.15);
+        }
+
+        .graph-node img {
+            border-radius: 50%;
+            border: 2px solid var(--glass-border);
+        }
+
+        .graph-node.degree-0 img {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+
+        .graph-node.degree-1 img {
+            border-color: var(--success-color);
+        }
+
+        .graph-node.degree-2 img {
+            border-color: #888;
+            opacity: 0.7;
+        }
+
+        .graph-node-label {
+            font-size: 0.7rem;
+            color: #ccc;
+            white-space: nowrap;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+        }
+
+        .graph-edge {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .conn-status-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .conn-status-accepted {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .conn-status-pending {
+            background: rgba(234, 179, 8, 0.15);
+            color: #eab308;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html" class="active"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid" style="grid-template-columns: 1fr 3fr; margin-top: 0;">
+            <!-- Left Sidebar -->
+            <aside>
+                <div class="dashboard-card">
+                    <h3>Manage Network</h3>
+                    <ul style="list-style: none; margin-top: 1rem; color: #ccc;">
+                        <li style="padding: 0.5rem 0; display: flex; justify-content: space-between;">
+                            <span><i class="fas fa-user-friends"></i> Connections</span>
+                            <span id="stat-connections">0</span>
+                        </li>
+                        <li style="padding: 0.5rem 0; display: flex; justify-content: space-between;">
+                            <span><i class="fas fa-user-clock"></i> Pending Sent</span>
+                            <span id="stat-pending-sent">0</span>
+                        </li>
+                        <li style="padding: 0.5rem 0; display: flex; justify-content: space-between;">
+                            <span><i class="fas fa-inbox"></i> Invitations</span>
+                            <span id="stat-pending-received">0</span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <div>
+                <!-- Invitations (Pending Received) -->
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-inbox" style="margin-right: 0.4rem;"></i> Invitations</h3>
+                    </div>
+                    <div id="invitations-list">
+                        <p style="color: #888; text-align: center; padding: 1rem;">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- My Connections -->
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <h3><i class="fas fa-user-friends" style="margin-right: 0.4rem;"></i> My Connections</h3>
+                    <div id="connections-list" style="margin-top: 1rem;">
+                        <p style="color: #888; text-align: center; padding: 1rem;">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Connection Graph -->
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <h3><i class="fas fa-project-diagram" style="margin-right: 0.4rem;"></i> Your Network Visualization</h3>
+                    <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">Explore how you are connected to
+                        others (Level 1 & 2 connections only).</p>
+                    <div class="graph-container" id="graph-container">
+                        <svg id="graph-edges" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                        <div id="graph-nodes"></div>
+                    </div>
+                    <div style="margin-top: 0.75rem; display: flex; gap: 1rem; font-size: 0.75rem; color: #888;">
+                        <span><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--primary-color); margin-right:0.3rem;"></span>You</span>
+                        <span><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--success-color); margin-right:0.3rem;"></span>1st degree</span>
+                        <span><span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#888; margin-right:0.3rem;"></span>2nd degree</span>
+                    </div>
+                </div>
+
+                <!-- Suggestions -->
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-user-plus" style="margin-right: 0.4rem;"></i> People you may know</h3>
+                    <div id="suggestions-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <p style="color: #888; text-align: center; padding: 1rem; grid-column: 1/-1;">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/script.js"></script>
+    <script>
+        let currentUser = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/v1/users/me');
+                if (res.status === 401) { window.location.href = 'auth.html'; return; }
+                const data = await res.json();
+                currentUser = data.email;
+                await Promise.all([loadConnections(), loadGraph(), loadSuggestions()]);
+            } catch (e) {
+                window.location.href = 'auth.html';
+            }
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        // ── Load Connections ──
+        async function loadConnections() {
+            const res = await fetch('/api/v1/connections');
+            const data = await res.json();
+
+            // Update sidebar stats
+            document.getElementById('stat-connections').textContent = data.total_connections;
+            document.getElementById('stat-pending-sent').textContent = data.pending_sent.length;
+            document.getElementById('stat-pending-received').textContent = data.pending_received.length;
+
+            // Render invitations
+            const invContainer = document.getElementById('invitations-list');
+            if (data.pending_received.length === 0) {
+                invContainer.innerHTML = '<p style="color: #888; text-align: center; padding: 1rem;">No pending invitations</p>';
+            } else {
+                invContainer.innerHTML = data.pending_received.map(inv => `
+                    <div class="connection-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(inv.name || inv.requester_email)}&background=random" alt="User"
+                                style="width: 50px; height: 50px; border-radius: 50%;">
+                            <div>
+                                <h4 style="margin: 0;">${escapeHtml(inv.name || inv.requester_email)}</h4>
+                                <p style="font-size: 0.8rem; color: #888;">${escapeHtml(inv.headline || inv.role || '')}</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-small" onclick="rejectConnection(${inv.id})"
+                                style="background: transparent; border-color: #888; color: #888;">Ignore</button>
+                            <button class="btn-small" onclick="acceptConnection(${inv.id})"
+                                style="background: transparent; border-color: var(--primary-color); color: var(--primary-color);">Accept</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render my connections
+            const connContainer = document.getElementById('connections-list');
+            if (data.connections.length === 0) {
+                connContainer.innerHTML = '<p style="color: #888; text-align: center; padding: 1rem;">No connections yet. Send requests from "People you may know" below!</p>';
+            } else {
+                connContainer.innerHTML = data.connections.map(c => {
+                    const otherEmail = c.requester_email === currentUser ? c.recipient_email : c.requester_email;
+                    return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.name || otherEmail)}&background=random"
+                                style="width: 45px; height: 45px; border-radius: 50%;">
+                            <div>
+                                <h4 style="margin: 0; font-size: 0.95rem;">${escapeHtml(c.name || otherEmail)}</h4>
+                                <p style="font-size: 0.8rem; color: #888;">${escapeHtml(c.headline || c.role || '')}</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="conn-status-badge conn-status-accepted">Connected</span>
+                            <button class="btn-small" onclick="removeConnection(${c.id})" title="Remove connection"
+                                style="font-size: 0.75rem; padding: 0.3rem 0.5rem; border-color: var(--danger-color, #ef4444); color: var(--danger-color, #ef4444);">
+                                <i class="fas fa-user-minus"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // ── Connection Actions ──
+        async function acceptConnection(connId) {
+            const res = await fetch(`/api/v1/connections/${connId}/accept`, { method: 'PUT' });
+            const data = await res.json();
+            if (data.status === 'success') {
+                await Promise.all([loadConnections(), loadGraph(), loadSuggestions()]);
+            } else {
+                alert(data.message || 'Failed to accept');
+            }
+        }
+
+        async function rejectConnection(connId) {
+            const res = await fetch(`/api/v1/connections/${connId}/reject`, { method: 'PUT' });
+            const data = await res.json();
+            if (data.status === 'success') {
+                await loadConnections();
+            } else {
+                alert(data.message || 'Failed to reject');
+            }
+        }
+
+        async function removeConnection(connId) {
+            if (!confirm('Remove this connection?')) return;
+            const res = await fetch(`/api/v1/connections/${connId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.status === 'success') {
+                await Promise.all([loadConnections(), loadGraph(), loadSuggestions()]);
+            } else {
+                alert(data.message || 'Failed to remove');
+            }
+        }
+
+        async function sendConnectionRequest(email) {
+            const res = await fetch('/api/v1/connections/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                await Promise.all([loadConnections(), loadSuggestions()]);
+            } else {
+                alert(data.message || 'Failed to send request');
+            }
+        }
+
+        // ── Connection Graph ──
+        async function loadGraph() {
+            try {
+                const res = await fetch('/api/v1/connections/graph');
+                const data = await res.json();
+                renderGraph(data.nodes || [], data.edges || []);
+            } catch (e) {
+                console.error('Graph load error:', e);
+            }
+        }
+
+        function renderGraph(nodes, edges) {
+            const container = document.getElementById('graph-container');
+            const nodesDiv = document.getElementById('graph-nodes');
+            const edgesSvg = document.getElementById('graph-edges');
+            const W = container.offsetWidth;
+            const H = container.offsetHeight;
+
+            nodesDiv.innerHTML = '';
+            edgesSvg.innerHTML = '';
+
+            if (nodes.length <= 1) {
+                nodesDiv.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#666;">
+                    <div style="text-align:center;">
+                        <i class="fas fa-project-diagram" style="font-size:2rem; margin-bottom:0.5rem; display:block;"></i>
+                        <p>Connect with others to see your network graph</p>
+                    </div>
+                </div>`;
+                return;
+            }
+
+            // Position nodes: center for degree 0, inner ring for degree 1, outer ring for degree 2
+            const positions = {};
+            const cx = W / 2, cy = H / 2;
+            const r1 = Math.min(W, H) * 0.25;
+            const r2 = Math.min(W, H) * 0.42;
+
+            const d1 = nodes.filter(n => n.degree === 1);
+            const d2 = nodes.filter(n => n.degree === 2);
+
+            nodes.forEach(n => {
+                if (n.degree === 0) {
+                    positions[n.email] = { x: cx, y: cy };
+                }
+            });
+
+            d1.forEach((n, i) => {
+                const angle = (2 * Math.PI * i) / d1.length - Math.PI / 2;
+                positions[n.email] = { x: cx + r1 * Math.cos(angle), y: cy + r1 * Math.sin(angle) };
+            });
+
+            d2.forEach((n, i) => {
+                const angle = (2 * Math.PI * i) / d2.length - Math.PI / 4;
+                positions[n.email] = { x: cx + r2 * Math.cos(angle), y: cy + r2 * Math.sin(angle) };
+            });
+
+            // Draw edges
+            edges.forEach(e => {
+                const from = positions[e.from], to = positions[e.to];
+                if (!from || !to) return;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', from.x);
+                line.setAttribute('y1', from.y);
+                line.setAttribute('x2', to.x);
+                line.setAttribute('y2', to.y);
+                line.setAttribute('stroke', 'rgba(255,255,255,0.15)');
+                line.setAttribute('stroke-width', '1');
+                edgesSvg.appendChild(line);
+            });
+
+            // Draw nodes
+            nodes.forEach(n => {
+                const pos = positions[n.email];
+                if (!pos) return;
+                const size = n.degree === 0 ? 48 : (n.degree === 1 ? 38 : 30);
+                const div = document.createElement('div');
+                div.className = `graph-node degree-${n.degree}`;
+                div.style.left = `${pos.x - size / 2}px`;
+                div.style.top = `${pos.y - size / 2 - 8}px`;
+                div.title = `${n.name} (${n.headline || ''})`;
+                div.innerHTML = `
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(n.name)}&background=random&size=${size * 2}" style="width:${size}px; height:${size}px;">
+                    <span class="graph-node-label">${escapeHtml(n.name)}</span>
+                `;
+                nodesDiv.appendChild(div);
+            });
+        }
+
+        // ── Suggestions ──
+        async function loadSuggestions() {
+            try {
+                const res = await fetch('/api/v1/connections/suggestions');
+                const data = await res.json();
+                const container = document.getElementById('suggestions-list');
+                const suggestions = data.suggestions || [];
+
+                if (suggestions.length === 0) {
+                    container.innerHTML = '<p style="color: #888; text-align: center; padding: 1rem; grid-column: 1/-1;">No suggestions available. All users are already connected!</p>';
+                    return;
+                }
+
+                container.innerHTML = suggestions.map(u => `
+                    <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 1rem; text-align: center;">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || u.email)}&background=random"
+                            style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 0.5rem;">
+                        <h4 style="margin: 0; font-size: 0.95rem;">${escapeHtml(u.name || u.email)}</h4>
+                        <p style="font-size: 0.75rem; color: #888; margin-bottom: 1rem;">${escapeHtml(u.headline || u.role || '')}</p>
+                        <button class="btn-small" onclick="sendConnectionRequest('${u.email}')">
+                            <i class="fas fa-user-plus" style="margin-right:0.3rem;"></i> Connect
+                        </button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Suggestions load error:', e);
+            }
+        }
+    </script>
+</body>
+
+</html>

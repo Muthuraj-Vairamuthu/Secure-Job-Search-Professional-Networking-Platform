@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <!-- Shared Navigation will be injected or hardcoded for now -->
+            <ul class="nav-links">
+                <li><a href="dashboard.html" class="active"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="company.html"><i class="fas fa-building"></i> Company</a></li>
+                <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a></li>
+                <!-- Admin Link (Conditional in real app) -->
+                <li><a href="admin.html" style="color: var(--warning-color);"><i class="fas fa-shield-alt"></i>
+                        Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid" style="grid-template-columns: 3fr 1fr; margin-top: 0;">
+            <!-- Main Feed -->
+            <div class="feed">
+                <!-- Share Box -->
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <img id="sharebox-avatar" src="https://ui-avatars.com/api/?name=User&background=random" alt="Profile"
+                            style="width: 48px; height: 48px; border-radius: 50%;">
+                        <input type="text" placeholder="Start a post..."
+                            style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); border-radius: 30px; color: #fff;">
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                        <button class="btn-small"><i class="fas fa-image"></i> Media</button>
+                        <button class="btn-small"><i class="fas fa-calendar"></i> Event</button>
+                        <button class="btn-small"><i class="fas fa-newspaper"></i> Write article</button>
+                    </div>
+                </div>
+
+                <!-- Feed Item 1 -->
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <div style="display: flex; gap: 0.8rem;">
+                            <img src="https://ui-avatars.com/api/?name=Tech+Corp&background=0D8ABC&color=fff"
+                                alt="Company" style="width: 40px; height: 40px; border-radius: 6px;">
+                            <div>
+                                <h4 style="margin: 0;">Tech Corp <i class="fas fa-check-circle"
+                                        style="color: var(--primary-color); font-size: 0.8rem;"></i></h4>
+                                <p style="font-size: 0.8rem; color: #888;">2 hours ago • Public</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-ellipsis-h" style="color: #888; cursor: pointer;"></i>
+                    </div>
+                    <p>We are excited to announce our new remote-first policy! Check out our careers page for open
+                        roles.</p>
+                    <div
+                        style="margin-top: 1rem; height: 200px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #888;">
+                        [Image Placeholder]
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; gap: 2rem; color: #888; font-size: 0.9rem;">
+                        <span><i class="far fa-thumbs-up"></i> Like</span>
+                        <span><i class="far fa-comment"></i> Comment</span>
+                        <span><i class="fas fa-share"></i> Share</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <aside>
+                <!-- Profile Summary -->
+                <div class="dashboard-card" style="text-align: center; margin-bottom: 2rem;">
+                    <div
+                        style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); height: 60px; border-radius: 12px 12px 0 0; margin: -1.5rem -1.5rem 1.5rem -1.5rem;">
+                    </div>
+                    <img id="dashboard-profile-avatar" src="https://ui-avatars.com/api/?name=User&background=random" alt="Profile"
+                        style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--bg-color); margin-top: -50px; position: relative;">
+                    <h3 id="dashboard-profile-name" style="border: none; margin: 0.5rem 0 0 0;">Loading...</h3>
+                    <p id="dashboard-profile-headline" style="font-size: 0.8rem; color: #888; margin-bottom: 1rem;">&nbsp;</p>
+
+                    <div style="text-align: left; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                            <span style="color: #888;">Profile viewers</span>
+                            <span id="dashboard-profile-views" style="color: var(--primary-color); font-weight: 600;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span style="color: #888;">Connections</span>
+                            <span id="dashboard-profile-connections" style="color: #fff; font-weight: 600;">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent -->
+                <div class="dashboard-card">
+                    <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem;">Recent</h3>
+                    <ul id="dashboard-recent-list" style="list-style: none; font-size: 0.85rem; color: #888;">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script src="../js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const [profileRes, viewsRes, connectionsRes, resumesRes] = await Promise.all([
+                    fetch('/api/v1/users/me'),
+                    fetch('/api/v1/users/me/views'),
+                    fetch('/api/v1/connections'),
+                    fetch('/api/v1/users/resumes')
+                ]);
+
+                if (profileRes.status === 401) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+
+                const profile = await profileRes.json();
+                const views = viewsRes.ok ? await viewsRes.json() : {};
+                const connections = connectionsRes.ok ? await connectionsRes.json() : {};
+                const resumes = resumesRes.ok ? await resumesRes.json() : {};
+
+                if (profile.status === 'success') {
+                    const name = profile.name || profile.email || 'User';
+                    const headline = profile.headline || (profile.role === 'recruiter' ? 'Recruiter / Employer' : 'Job Seeker');
+                    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=128`;
+
+                    document.getElementById('sharebox-avatar').src = avatarUrl;
+                    document.getElementById('dashboard-profile-avatar').src = avatarUrl;
+                    document.getElementById('dashboard-profile-name').textContent = name;
+                    document.getElementById('dashboard-profile-headline').textContent = headline;
+                }
+
+                document.getElementById('dashboard-profile-views').textContent =
+                    views.status === 'success' ? String(views.views_this_week ?? 0) : '-';
+                document.getElementById('dashboard-profile-connections').textContent =
+                    connections.status === 'success' ? String(connections.total_connections ?? 0) : '-';
+
+                const recentList = document.getElementById('dashboard-recent-list');
+                const extractedSkills = [];
+                if (resumes.status === 'success') {
+                    (resumes.resumes || []).forEach(r => {
+                        (r.parsed_skills || []).forEach(skill => {
+                            if (!extractedSkills.includes(skill)) extractedSkills.push(skill);
+                        });
+                    });
+                }
+
+                if (extractedSkills.length > 0) {
+                    recentList.innerHTML = extractedSkills.slice(0, 5).map(skill =>
+                        `<li style="margin-bottom: 0.5rem;"><i class="fas fa-hashtag"></i> ${escapeHtml(skill)}</li>`
+                    ).join('');
+                } else {
+                    recentList.innerHTML = '<li>Upload a resume to populate recent skills.</li>';
+                }
+            } catch (e) {
+                console.error('Failed to load dashboard profile summary:', e);
+            }
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

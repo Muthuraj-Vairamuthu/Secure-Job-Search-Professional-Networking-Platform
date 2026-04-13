@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Step indicators */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--glass-border);
+            transition: background 0.3s ease;
+        }
+
+        .step-dot.active {
+            background: var(--primary-color);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+        }
+
+        .step-label {
+            font-size: 0.78rem;
+            color: #888;
+            text-align: center;
+            margin-bottom: 1.2rem;
+            letter-spacing: 0.02em;
+        }
+
+        .step-label span {
+            color: var(--primary-color);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: #888;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        /* OTP group sized for 6 digits */
+        .otp-input-group-6 {
+            display: flex;
+            gap: 0.4rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .otp-input-group-6 input {
+            width: 42px;
+            height: 48px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: #fff;
+            transition: border-color 0.2s;
+        }
+
+        .otp-input-group-6 input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        }
+
+        .resend-otp {
+            text-align: center;
+            font-size: 0.82rem;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+
+        .resend-otp a {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .resend-otp a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="index.html" class="logo">FCS GROUP 19</a>
+            <div class="nav-links">
+                <a href="index.html">Back to Home</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="auth-container">
+
+        <!-- ========== LOGIN STEP 1: Credentials ========== -->
+        <div id="login-step1" class="auth-card">
+            <div class="step-indicator">
+                <div class="step-dot active" id="dot1-1"></div>
+                <div class="step-dot" id="dot1-2"></div>
+            </div>
+            <div class="step-label">Step <span>1 of 2</span> — Enter your credentials</div>
+            <h2>Welcome Back</h2>
+            <form onsubmit="handleLoginStep1(event)">
+                <div class="form-group">
+                    <label for="username">Username / Email</label>
+                    <input type="text" id="username" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <span class="virtual-keyboard-trigger" onclick="showVKForPassword()"><i
+                            class="fas fa-keyboard"></i> Use Virtual Keyboard</span>
+                </div>
+                <button type="submit" class="btn-primary">Continue <i class="fas fa-arrow-right"
+                        style="margin-left:0.4rem;"></i></button>
+                <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+                    <p>Don't have an account? <a href="#" onclick="showSignup()"
+                            style="color: var(--primary-color);">Sign Up</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- ========== LOGIN STEP 2: OTP ========== -->
+        <div id="login-step2" class="auth-card" style="display: none;">
+            <div class="step-indicator">
+                <div class="step-dot" id="dot2-1"></div>
+                <div class="step-dot active" id="dot2-2"></div>
+            </div>
+            <div class="step-label">Step <span>2 of 2</span> — Two-Factor Authentication</div>
+            <h2>Verify OTP</h2>
+            <button class="back-link" onclick="showLoginStep1()"><i class="fas fa-arrow-left"></i> Back</button>
+            <p style="font-size: 0.85rem; color: #888; margin-bottom: 1.2rem; text-align:center;">
+                Enter the 6-digit code sent to your registered device.
+            </p>
+            <form onsubmit="handleLoginStep2(event)">
+                <div class="otp-input-group-6" id="otp-inputs">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·" readonly>
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·" readonly>
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·" readonly>
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·" readonly>
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·" readonly>
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·" readonly>
+                </div>
+                <button type="button" class="btn-primary" style="margin-bottom: 0.5rem; background: linear-gradient(135deg, #10b981, #059669);" onclick="showVKForLoginOTP()">
+                    <i class="fas fa-keyboard" style="margin-right:0.4rem;"></i>Enter OTP via Virtual Keyboard
+                </button>
+                <div class="resend-otp">
+                    Didn't receive it? <a onclick="alert('OTP resent!')">Resend OTP</a>
+                </div>
+                <button type="submit" class="btn-primary"><i class="fas fa-shield-alt"
+                        style="margin-right:0.4rem;"></i>Verify &amp; Login</button>
+            </form>
+        </div>
+
+        <!-- ========== SIGNUP STEP 1: Basic Info ========== -->
+        <div id="signup-step1" class="auth-card" style="display: none;">
+            <div class="step-indicator">
+                <div class="step-dot active" id="dot-s1"></div>
+                <div class="step-dot" id="dot-s2"></div>
+            </div>
+            <div class="step-label">Step <span>1 of 2</span> — Create Account</div>
+            <h2>Create Account</h2>
+            <form onsubmit="handleSignupStep1(event)">
+                <div class="form-group">
+                    <label for="reg-name">Full Name</label>
+                    <input type="text" id="reg-name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email</label>
+                    <input type="email" id="reg-email" placeholder="john@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-role">I am a...</label>
+                    <select id="reg-role" required>
+                        <option value="user">Job Seeker</option>
+                        <option value="recruiter">Recruiter / Employer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" placeholder="Create a strong password" required>
+                </div>
+
+                <div class="form-group">
+                    <div class="security-notice">
+                        <i class="fas fa-lock"></i> Your data will be encrypted at rest.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Continue Setup</button>
+                <div style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+                    <p>Already have an account? <a href="#" onclick="showLoginStep1()"
+                            style="color: var(--primary-color);">Login</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- ========== SIGNUP STEP 2: TOTP Setup ========== -->
+        <div id="signup-step2" class="auth-card" style="display: none;">
+            <div class="step-indicator">
+                <div class="step-dot" id="dot-s1"></div>
+                <div class="step-dot active" id="dot-s2"></div>
+            </div>
+            <div class="step-label">Step <span>2 of 2</span> — Setup Authenticator</div>
+            <h2>Secure Your Account</h2>
+            <p style="font-size: 0.85rem; color: #888; margin-bottom: 1.2rem; text-align:center;">
+                Please add this secret key to your Authenticator App (like Google Authenticator or Authy) and enter the
+                6-digit code below to finalize registration.
+            </p>
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <code id="setup-secret-display"
+                    style="font-size: 1.2rem; background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 6px; letter-spacing: 2px;"></code>
+            </div>
+            <form onsubmit="handleSignupStep2(event)">
+                <div class="otp-input-group-6" id="signup-otp-inputs">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" placeholder="·">
+                </div>
+                <button type="submit" class="btn-primary">Verify & Complete</button>
+            </form>
+        </div>
+    </main>
+
+    <footer style="position: fixed; bottom: 0; width: 100%;">
+        <p>&copy; 2026 FCS Group 19. all rights reserved.</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/virtual-keyboard.js"></script>
+    <script>
+        let currentMfaToken = null;
+        let signupContext = null;
+
+        // ---- Page init via query params ----
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'signup') {
+            showSignup();
+        }
+
+        // ---- View helpers ----
+        function showLoginStep1() {
+            document.getElementById('login-step1').style.display = 'block';
+            document.getElementById('login-step2').style.display = 'none';
+            document.getElementById('signup-step1').style.display = 'none';
+            document.getElementById('signup-step2').style.display = 'none';
+        }
+
+        function showLoginStep2() {
+            document.getElementById('login-step1').style.display = 'none';
+            document.getElementById('login-step2').style.display = 'block';
+            document.getElementById('signup-step1').style.display = 'none';
+            document.getElementById('signup-step2').style.display = 'none';
+            const inputs = document.querySelectorAll('#otp-inputs input');
+            if (inputs.length) inputs[0].focus();
+        }
+
+        function showSignup() {
+            document.getElementById('login-step1').style.display = 'none';
+            document.getElementById('login-step2').style.display = 'none';
+            document.getElementById('signup-step1').style.display = 'block';
+            document.getElementById('signup-step2').style.display = 'none';
+        }
+
+        function showSignupStep2() {
+            document.getElementById('login-step1').style.display = 'none';
+            document.getElementById('login-step2').style.display = 'none';
+            document.getElementById('signup-step1').style.display = 'none';
+            document.getElementById('signup-step2').style.display = 'block';
+            const inputs = document.querySelectorAll('#signup-otp-inputs input');
+            if (inputs.length) inputs[0].focus();
+        }
+
+        // ---- OTP auto-advance ----
+        document.addEventListener('DOMContentLoaded', () => {
+            const setupInputs = (selector) => {
+                const inputs = document.querySelectorAll(selector);
+                inputs.forEach((input, idx) => {
+                    input.addEventListener('input', () => {
+                        input.value = input.value.replace(/[^0-9]/g, '');
+                        if (input.value && idx < inputs.length - 1) {
+                            inputs[idx + 1].focus();
+                        }
+                    });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace' && !input.value && idx > 0) {
+                            inputs[idx - 1].focus();
+                        }
+                    });
+                });
+            };
+            setupInputs('#otp-inputs input');
+            setupInputs('#signup-otp-inputs input');
+        });
+
+        // ---- Handlers ----
+        async function handleLoginStep1(e) {
+            e.preventDefault();
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (data.status === 'pending_mfa') {
+                    currentMfaToken = data.mfa_token;
+                    showLoginStep2();
+                } else if (data.status === 'success') {
+                    // Not expecting this immediately since we force MFA for everyone, but just in case
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Login Failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error with server.');
+            }
+        }
+
+        async function handleLoginStep2(e) {
+            e.preventDefault();
+            const inputs = document.querySelectorAll('#otp-inputs input');
+            const otp = Array.from(inputs).map(i => i.value).join('');
+            if (otp.length < 6) {
+                alert('Please enter all 6 digits via the virtual keyboard.');
+                return;
+            }
+            await submitLoginOTP(otp);
+        }
+
+        async function submitLoginOTP(otp) {
+            try {
+                const res = await fetch('/api/v1/auth/login/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mfa_token: currentMfaToken, totp_code: otp })
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('MFA Failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error with server.');
+            }
+        }
+
+        function showVKForLoginOTP() {
+            VirtualKeyboard.show({
+                title: 'Enter Login OTP',
+                subtitle: 'Enter the 6-digit code from your authenticator app',
+                digits: 6,
+                onSubmit: async (code) => {
+                    // Fill the display inputs
+                    const inputs = document.querySelectorAll('#otp-inputs input');
+                    code.split('').forEach((d, i) => { if (inputs[i]) inputs[i].value = d; });
+                    // Submit the login
+                    try {
+                        const res = await fetch('/api/v1/auth/login/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ mfa_token: currentMfaToken, totp_code: code })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 300);
+                            return true;
+                        } else {
+                            alert('MFA Failed: ' + data.message);
+                            return false;
+                        }
+                    } catch (e) {
+                        alert('Communication error.');
+                        return false;
+                    }
+                }
+            });
+        }
+
+        function showVKForPassword() {
+            VirtualKeyboard.show({
+                title: 'Virtual Keyboard',
+                subtitle: 'Type your password securely using on-screen keys',
+                digits: 20,
+                onSubmit: async (code) => {
+                    document.getElementById('password').value = code;
+                    return true;
+                }
+            });
+        }
+
+        async function handleSignupStep1(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const role = document.getElementById('reg-role').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const res = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role, name })
+                });
+                const data = await res.json();
+
+                if (data.status === 'pending_mfa_setup') {
+                    signupContext = data.context;
+                    document.getElementById('setup-secret-display').textContent = data.mfa_secret_setup_key;
+                    showSignupStep2();
+                } else {
+                    alert('Signup Failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error with server.');
+            }
+        }
+
+        async function handleSignupStep2(e) {
+            e.preventDefault();
+            const inputs = document.querySelectorAll('#signup-otp-inputs input');
+            const otp = Array.from(inputs).map(i => i.value).join('');
+            if (otp.length < 6) {
+                alert('Please enter all 6 digits of the setup code.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/v1/auth/register/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ context: signupContext, totp_code: otp })
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    await completeEmailVerification(data.email, data.verification_token_preview || '');
+                } else {
+                    alert('Verification Failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error with server.');
+            }
+        }
+
+        async function completeEmailVerification(email, suggestedToken) {
+            const token = prompt(
+                'Registration complete. Enter the email verification token from the simulated delivery log to activate your account.',
+                suggestedToken
+            );
+
+            if (!token) {
+                alert('Account created, but email verification is still required before login.');
+                showLoginStep1();
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/v1/auth/verify-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, token })
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    alert('Registration complete and email verified. You can now log in.');
+                } else {
+                    alert('Account created, but email verification is still pending: ' + data.message);
+                }
+                showLoginStep1();
+            } catch (e) {
+                alert('Account created, but email verification could not be completed right now.');
+                showLoginStep1();
+            }
+        }
+    </script>
+</body>
+
+</html>

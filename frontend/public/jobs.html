@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #1a1a2e; border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 2rem; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto;
+        }
+        .modal-content h2 { margin-bottom: 1.5rem; color: #fff; }
+        .job-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px;
+            padding: 1.25rem; margin-bottom: 1rem; transition: border-color 0.2s;
+        }
+        .job-card:hover { border-color: var(--primary-color); }
+        .filter-group { margin-bottom: 0.75rem; }
+        .filter-group label {
+            display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: #ccc;
+            margin-bottom: 0.4rem; cursor: pointer;
+        }
+        .filter-group input[type="checkbox"] { accent-color: var(--primary-color); }
+        .status-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .status-Applied { background: rgba(99,102,241,0.2); color: var(--primary-color); }
+        .status-Reviewed { background: rgba(245,158,11,0.2); color: var(--warning-color); }
+        .status-Interviewed { background: rgba(59,130,246,0.2); color: #3b82f6; }
+        .status-Rejected { background: rgba(239,68,68,0.2); color: var(--danger-color); }
+        .status-Offer { background: rgba(16,185,129,0.2); color: var(--success-color); }
+        .resume-option {
+            padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 8px;
+            margin-bottom: 0.5rem; cursor: pointer; transition: border-color 0.2s;
+        }
+        .resume-option:hover, .resume-option.selected { border-color: var(--primary-color); background: rgba(99,102,241,0.1); }
+    </style>
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html" class="active"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid" style="grid-template-columns: 1fr 3fr; margin-top: 0;">
+            <!-- Filters Sidebar -->
+            <aside>
+                <div class="dashboard-card" style="margin-bottom: 1.5rem;">
+                    <h3><i class="fas fa-filter"></i> Filters</h3>
+                    <div class="filter-group" style="margin-top: 1rem;">
+                        <label style="font-weight:600; color:#fff; margin-bottom:0.5rem;">Job Type</label>
+                        <label><input type="checkbox" value="full-time" class="filter-type"> Full-time</label>
+                        <label><input type="checkbox" value="part-time" class="filter-type"> Part-time</label>
+                        <label><input type="checkbox" value="internship" class="filter-type"> Internship</label>
+                        <label><input type="checkbox" value="contract" class="filter-type"> Contract</label>
+                    </div>
+                    <button class="btn-small" style="width:100%; margin-top:0.5rem;" onclick="searchJobs()">Apply Filters</button>
+                </div>
+
+                <!-- My Applications -->
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-file-alt"></i> My Applications</h3>
+                    <div id="my-applications" style="margin-top: 1rem;">
+                        <p style="color:#888; font-size:0.85rem;">Loading...</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Job Listings -->
+            <div>
+                <!-- Search Bar -->
+                <div class="dashboard-card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; gap: 1rem;">
+                        <input type="text" id="search-keyword" placeholder="Search by title, skill, or company"
+                            style="flex: 2; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
+                            onkeydown="if(event.key==='Enter') searchJobs()">
+                        <input type="text" id="search-location" placeholder="Location"
+                            style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
+                            onkeydown="if(event.key==='Enter') searchJobs()">
+                        <button class="btn-primary" style="width: auto; padding: 0 2rem;" onclick="searchJobs()">Search</button>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="jobs-results">
+                    <div class="dashboard-card">
+                        <h3 style="margin-bottom: 1.5rem;">Loading jobs...</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Apply Modal -->
+    <div class="modal-overlay" id="apply-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-paper-plane"></i> Apply for Job</h2>
+            <p id="apply-job-title" style="color:var(--primary-color); font-size:1.1rem; margin-bottom:1rem;"></p>
+            <p id="apply-job-company" style="color:#888; font-size:0.9rem; margin-bottom:1.5rem;"></p>
+            
+            <div class="form-group">
+                <label>Select Resume (optional)</label>
+                <div id="resume-list">
+                    <p style="color:#888; font-size:0.85rem;">Loading resumes...</p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Cover Note</label>
+                <textarea id="apply-cover-note" rows="4" placeholder="Write a brief note about why you're a good fit..."
+                    style="width:100%; padding:0.75rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:6px; color:#fff; font-family:var(--font-main);"></textarea>
+            </div>
+            <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                <button class="btn-primary" onclick="submitApplication()">Submit Application</button>
+                <button class="btn-small" onclick="closeModal('apply-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script>
+        let currentJobId = null;
+        let selectedResumeId = '';
+        let appliedJobIds = new Set();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check auth
+            fetch('/api/v1/users/me').then(r => {
+                if (r.status === 401) { window.location.href = 'auth.html'; return; }
+                searchJobs();
+                loadMyApplications();
+            });
+        });
+
+        async function searchJobs() {
+            const keyword = document.getElementById('search-keyword').value.trim();
+            const location = document.getElementById('search-location').value.trim();
+            const checkedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+
+            let url = '/api/v1/jobs?';
+            if (keyword) url += `keyword=${encodeURIComponent(keyword)}&`;
+            if (location) url += `location=${encodeURIComponent(location)}&`;
+            if (checkedTypes.length === 1) url += `job_type=${checkedTypes[0]}&`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            const jobs = data.jobs || [];
+
+            // Client-side multi-type filter
+            let filtered = jobs;
+            if (checkedTypes.length > 1) {
+                filtered = jobs.filter(j => checkedTypes.includes(j.job_type));
+            }
+
+            renderJobs(filtered);
+        }
+
+        function renderJobs(jobs) {
+            const container = document.getElementById('jobs-results');
+            if (jobs.length === 0) {
+                container.innerHTML = `<div class="dashboard-card" style="text-align:center; padding:3rem;">
+                    <i class="fas fa-search" style="font-size:2rem; color:#666; margin-bottom:1rem; display:block;"></i>
+                    <p style="color:#888;">No jobs found. Try different search terms.</p>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="dashboard-card"><h3 style="margin-bottom:1.5rem;">${jobs.length} Job${jobs.length > 1 ? 's' : ''} Found</h3>` +
+                jobs.map(j => {
+                    const hasApplied = appliedJobIds.has(j.id);
+                    const salaryText = j.salary_min ? `$${Number(j.salary_min).toLocaleString()}${j.salary_max ? ' - $' + Number(j.salary_max).toLocaleString() : '+'}` : '';
+                    const timeAgo = getTimeAgo(j.created_at);
+                    return `
+                    <div class="job-card">
+                        <div style="display:flex; gap:1.2rem;">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(j.company_name)}&background=random&size=64" 
+                                 style="width:56px; height:56px; border-radius:8px; flex-shrink:0;">
+                            <div style="flex:1;">
+                                <h4 style="font-size:1.05rem; margin-bottom:0.2rem; color:var(--primary-color);">${escapeHtml(j.title)}</h4>
+                                <p style="color:#fff; margin-bottom:0.2rem;">${escapeHtml(j.company_name)}</p>
+                                <p style="font-size:0.85rem; color:#888; margin-bottom:0.5rem;">
+                                    <i class="fas fa-map-marker-alt"></i> ${escapeHtml(j.location || j.company_location || 'Not specified')}
+                                    • ${escapeHtml(j.job_type)} ${salaryText ? '• ' + salaryText : ''}
+                                </p>
+                                ${j.skills ? `<div style="display:flex; gap:0.4rem; flex-wrap:wrap;">${j.skills.split(',').slice(0,5).map(s => `<span class="badge badge-info">${escapeHtml(s.trim())}</span>`).join('')}</div>` : ''}
+                            </div>
+                            <div style="text-align:right; flex-shrink:0;">
+                                ${hasApplied 
+                                    ? `<button class="btn-small" disabled style="background:rgba(16,185,129,0.2); color:#10b981; border-color:#10b981;"><i class="fas fa-check"></i> Applied</button>`
+                                    : `<button class="btn-primary" style="width:auto;" onclick="openApplyModal(${j.id}, '${escapeHtml(j.title)}', '${escapeHtml(j.company_name)}')">Apply Now</button>`
+                                }
+                                <p style="font-size:0.75rem; color:#888; margin-top:0.4rem;">${timeAgo}</p>
+                                ${j.applicant_count > 0 ? `<p style="font-size:0.75rem; color:#aaa;">${j.applicant_count} applicant${j.applicant_count > 1 ? 's' : ''}</p>` : ''}
+                            </div>
+                        </div>
+                        ${j.description ? `<p style="font-size:0.85rem; color:#aaa; margin-top:0.75rem; line-height:1.5;">${escapeHtml(j.description).substring(0, 200)}${j.description.length > 200 ? '...' : ''}</p>` : ''}
+                    </div>`;
+                }).join('') + '</div>';
+        }
+
+        async function loadMyApplications() {
+            const res = await fetch('/api/v1/applications/me');
+            const data = await res.json();
+            const apps = data.applications || [];
+            const container = document.getElementById('my-applications');
+
+            // Track applied job IDs
+            appliedJobIds = new Set(apps.map(a => a.job_id));
+
+            if (apps.length === 0) {
+                container.innerHTML = '<p style="color:#888; font-size:0.85rem;">No applications yet. Start applying!</p>';
+                return;
+            }
+            container.innerHTML = apps.map(a => `
+                <div style="padding:0.6rem 0; font-size:0.9rem; border-bottom:1px solid var(--glass-border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:0.5rem;">${escapeHtml(a.job_title)}</span>
+                        <span class="status-badge status-${a.status}">${a.status}</span>
+                    </div>
+                    <small style="color:#888;">${escapeHtml(a.company_name)}</small>
+                </div>
+            `).join('');
+        }
+
+        async function openApplyModal(jobId, title, company) {
+            currentJobId = jobId;
+            selectedResumeId = '';
+            document.getElementById('apply-job-title').textContent = title;
+            document.getElementById('apply-job-company').textContent = company;
+            document.getElementById('apply-cover-note').value = '';
+
+            // Load user's resumes
+            const res = await fetch('/api/v1/users/resumes');
+            const data = await res.json();
+            const resumes = data.resumes || [];
+            const resumeContainer = document.getElementById('resume-list');
+
+            if (resumes.length === 0) {
+                resumeContainer.innerHTML = '<p style="color:#888; font-size:0.85rem;">No resumes uploaded. <a href="profile.html" style="color:var(--primary-color);">Upload one</a></p>';
+            } else {
+                resumeContainer.innerHTML = resumes.map(r => `
+                    <div class="resume-option" onclick="selectResume('${r.resume_id}', this)">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span><i class="fas fa-file-pdf" style="color:var(--accent-color);"></i> Resume ${r.original_ext}</span>
+                            <span style="font-size:0.75rem; color:#888;">${(r.file_size / 1024).toFixed(1)} KB</span>
+                        </div>
+                        <small style="color:#888;">Uploaded ${new Date(r.upload_timestamp).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('apply-modal').classList.add('active');
+        }
+
+        function selectResume(resumeId, el) {
+            selectedResumeId = resumeId;
+            document.querySelectorAll('.resume-option').forEach(r => r.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        async function submitApplication() {
+            const res = await fetch('/api/v1/applications', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    job_id: currentJobId,
+                    resume_id: selectedResumeId,
+                    cover_note: document.getElementById('apply-cover-note').value.trim()
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                closeModal('apply-modal');
+                appliedJobIds.add(currentJobId);
+                searchJobs(); // Refresh to show "Applied" state
+                loadMyApplications();
+                alert('Application submitted successfully!');
+            } else {
+                alert(data.message || 'Failed to submit application');
+            }
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function getTimeAgo(isoStr) {
+            if (!isoStr) return '';
+            const diff = Date.now() - new Date(isoStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 60) return `${mins}m ago`;
+            const hours = Math.floor(mins / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            if (days < 7) return `${days}d ago`;
+            return `${Math.floor(days / 7)}w ago`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

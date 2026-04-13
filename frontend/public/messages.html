@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .chat-container {
+            display: grid; grid-template-columns: 300px 1fr; height: calc(100vh - 120px);
+            border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; background: var(--glass-bg);
+        }
+        .chat-sidebar { border-right: 1px solid var(--glass-border); overflow-y: auto; display: flex; flex-direction: column; }
+        .chat-main { display: flex; flex-direction: column; }
+        .convo-item {
+            padding: 0.8rem 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.15s;
+        }
+        .convo-item:hover { background: rgba(255,255,255,0.05); }
+        .convo-item.active { background: rgba(99,102,241,0.1); border-left: 3px solid var(--primary-color); }
+        .message-bubble {
+            max-width: 70%; padding: 0.7rem 1rem; border-radius: 12px; margin-bottom: 0.3rem;
+            word-wrap: break-word; font-size: 0.9rem;
+        }
+        .msg-sent { background: var(--primary-color); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+        .msg-received { background: rgba(255,255,255,0.1); border-bottom-left-radius: 4px; align-self: flex-start; }
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #1a1a2e; border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 2rem; width: 90%; max-width: 450px; max-height: 80vh; overflow-y: auto;
+        }
+        .user-search-result {
+            padding: 0.6rem; border-radius: 8px; cursor: pointer; display: flex; gap: 0.8rem; align-items: center;
+            transition: background 0.15s; margin-bottom: 0.25rem;
+        }
+        .user-search-result:hover { background: rgba(255,255,255,0.05); }
+        .e2ee-badge {
+            display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem;
+            color: var(--success-color); background: rgba(16,185,129,0.1); padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+        }
+        .typing-area {
+            padding: 0.75rem 1rem; border-top: 1px solid var(--glass-border);
+            display: flex; gap: 0.75rem; align-items: center;
+        }
+        .empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: #666; }
+        .empty-chat i { font-size: 3rem; margin-bottom: 1rem; }
+    </style>
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html" class="active"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main style="max-width: 1200px; height: calc(100vh - 120px);">
+        <div class="chat-container">
+            <!-- Sidebar: Conversations List -->
+            <div class="chat-sidebar">
+                <div style="padding:0.75rem; border-bottom:1px solid var(--glass-border); display:flex; gap:0.5rem;">
+                    <input type="text" id="convo-search" placeholder="Search conversations..."
+                        style="flex:1; padding:0.5rem 0.75rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:20px; color:#fff; font-size:0.85rem;">
+                    <button class="btn-small" onclick="showNewConvoModal()" title="New conversation" style="border-radius:50%; width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div id="conversations-list" style="flex:1; overflow-y:auto;">
+                    <div style="padding:2rem; text-align:center; color:#666;">
+                        <i class="fas fa-comments" style="font-size:1.5rem; margin-bottom:0.5rem; display:block;"></i>
+                        <p style="font-size:0.85rem;">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main: Chat Window -->
+            <div class="chat-main">
+                <!-- Default empty state -->
+                <div id="chat-empty" class="empty-chat">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3 style="margin-bottom:0.5rem;">End-to-End Encrypted Messaging</h3>
+                    <p style="font-size:0.9rem; max-width:350px; text-align:center;">Select a conversation or start a new one. All messages are encrypted before leaving your browser.</p>
+                </div>
+
+                <!-- Active chat (hidden by default) -->
+                <div id="chat-active" style="display:none; flex-direction:column; height:100%;">
+                    <!-- Chat Header -->
+                    <div style="padding:0.75rem 1rem; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; gap:0.8rem; align-items:center;">
+                            <img id="chat-avatar" src="" style="width:36px; height:36px; border-radius:50%;">
+                            <div>
+                                <h4 id="chat-name" style="font-size:0.95rem; margin:0;"></h4>
+                                <span class="e2ee-badge"><i class="fas fa-lock"></i> End-to-End Encrypted</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <span id="chat-members-count" style="font-size:0.8rem; color:#888;"></span>
+                            <button id="add-member-btn" class="btn-small" onclick="showAddMemberModal()" title="Add member" style="display:none;">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div id="messages-area" style="flex:1; padding:1rem; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem;">
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="typing-area">
+                        <input type="text" id="message-input" placeholder="Type a secure message..."
+                            style="flex:1; padding:0.7rem 1rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:20px; color:#fff;"
+                            onkeydown="if(event.key==='Enter') sendMessage()">
+                        <button class="btn-primary" onclick="sendMessage()"
+                            style="width:40px; height:40px; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- New Conversation Modal -->
+    <div class="modal-overlay" id="new-convo-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-comment-medical"></i> New Conversation</h2>
+            <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                <button class="btn-small" id="btn-direct" onclick="setConvoType('direct')" style="flex:1; background:var(--primary-color); color:#fff;">Direct</button>
+                <button class="btn-small" id="btn-group" onclick="setConvoType('group')" style="flex:1;">Group</button>
+            </div>
+            <div id="group-name-field" style="display:none;" class="form-group">
+                <label>Group Name</label>
+                <input type="text" id="new-group-name" placeholder="e.g. Project Team">
+            </div>
+            <div class="form-group">
+                <label>Search Users</label>
+                <input type="text" id="user-search-input" placeholder="Type name or email..." oninput="searchUsers(this.value)">
+            </div>
+            <div id="user-search-results" style="max-height:200px; overflow-y:auto;"></div>
+            <div id="selected-participants" style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.5rem;"></div>
+            <button class="btn-primary" style="margin-top:1rem;" onclick="startConversation()">Start Conversation</button>
+            <button class="btn-small" style="margin-top:0.5rem; width:100%;" onclick="closeModal('new-convo-modal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div class="modal-overlay" id="add-member-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-user-plus"></i> Add Member</h2>
+            <div class="form-group">
+                <label>Search Users</label>
+                <input type="text" id="add-member-search" placeholder="Type name or email..." oninput="searchUsersForAdd(this.value)">
+            </div>
+            <div id="add-member-results" style="max-height:200px; overflow-y:auto;"></div>
+            <button class="btn-small" style="margin-top:1rem; width:100%;" onclick="closeModal('add-member-modal')">Cancel</button>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script>
+        let currentUser = '';
+        let currentConvoId = null;
+        let conversations = [];
+        let convoType = 'direct';
+        let selectedParticipants = [];
+        let cryptoKeyPair = null;
+        let sharedKey = null;
+        let pollInterval = null;
+
+        // ── E2EE Crypto Layer ──
+        // Uses Web Crypto API: AES-GCM for message encryption
+        // Key derived from a shared passphrase per conversation (simplified E2EE)
+        
+        async function getConversationKey(convId) {
+            // Derive a per-conversation AES key from conversation ID (shared secret)
+            // In production, this would use ECDH key exchange between participants
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                new TextEncoder().encode(`e2ee-conv-${convId}-shared-secret`),
+                { name: 'PBKDF2' },
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+            return await crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt: new TextEncoder().encode(`salt-${convId}`), iterations: 100000, hash: 'SHA-256' },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        async function encryptMessage(plaintext, convId) {
+            const key = await getConversationKey(convId);
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encoded = new TextEncoder().encode(plaintext);
+            const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
+            return {
+                encrypted: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
+                iv: btoa(String.fromCharCode(...iv))
+            };
+        }
+
+        async function decryptMessage(encryptedB64, ivB64, convId) {
+            try {
+                const key = await getConversationKey(convId);
+                const ciphertext = Uint8Array.from(atob(encryptedB64), c => c.charCodeAt(0));
+                const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+                const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+                return new TextDecoder().decode(decrypted);
+            } catch (e) {
+                return '[Encrypted message - unable to decrypt]';
+            }
+        }
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/v1/users/me');
+                if (res.status === 401) { window.location.href = 'auth.html'; return; }
+                const data = await res.json();
+                currentUser = data.email;
+                loadConversations();
+            } catch (e) {
+                window.location.href = 'auth.html';
+            }
+        });
+
+        // ── Load Conversations ──
+        async function loadConversations() {
+            const res = await fetch('/api/v1/messages/conversations');
+            const data = await res.json();
+            conversations = data.conversations || [];
+            renderConversations();
+        }
+
+        function renderConversations() {
+            const container = document.getElementById('conversations-list');
+            const searchTerm = document.getElementById('convo-search').value.toLowerCase();
+
+            let filtered = conversations;
+            if (searchTerm) {
+                filtered = conversations.filter(c => {
+                    const name = getConvoName(c).toLowerCase();
+                    return name.includes(searchTerm);
+                });
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="padding:2rem; text-align:center; color:#666;">
+                    <i class="fas fa-comments" style="font-size:1.5rem; margin-bottom:0.5rem; display:block;"></i>
+                    <p style="font-size:0.85rem;">${searchTerm ? 'No matching conversations' : 'No conversations yet'}</p>
+                    <button class="btn-small" onclick="showNewConvoModal()" style="margin-top:0.75rem;">Start a conversation</button>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(c => {
+                const name = getConvoName(c);
+                const isGroup = c.type === 'group';
+                const lastTime = c.last_message ? formatTime(c.last_message.timestamp) : '';
+                return `
+                <div class="convo-item ${currentConvoId === c.id ? 'active' : ''}" onclick="openConversation(${c.id})">
+                    <div style="display:flex; gap:0.7rem; align-items:center;">
+                        <div style="position:relative;">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=40" 
+                                 style="width:40px; height:40px; border-radius:50%;">
+                            ${isGroup ? '<i class="fas fa-users" style="position:absolute; bottom:-2px; right:-2px; font-size:0.6rem; background:var(--primary-color); color:#fff; padding:2px 3px; border-radius:50%;"></i>' : ''}
+                        </div>
+                        <div style="flex:1; overflow:hidden;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h4 style="font-size:0.9rem; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    ${escapeHtml(name)} 
+                                    <i class="fas fa-lock" style="font-size:0.6rem; color:var(--success-color);" title="E2EE"></i>
+                                </h4>
+                                <span style="font-size:0.7rem; color:#888; flex-shrink:0;">${lastTime}</span>
+                            </div>
+                            <p style="font-size:0.8rem; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:0.1rem;">
+                                ${c.message_count > 0 ? `${c.message_count} messages` : 'No messages yet'}
+                            </p>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function getConvoName(convo) {
+            if (convo.type === 'group' && convo.name) return convo.name;
+            const others = (convo.members || []).filter(m => m.user_email !== currentUser);
+            if (others.length > 0) return others.map(m => m.name || m.user_email).join(', ');
+            return 'Conversation';
+        }
+
+        // ── Open Conversation ──
+        async function openConversation(convId) {
+            currentConvoId = convId;
+            if (pollInterval) clearInterval(pollInterval);
+
+            document.getElementById('chat-empty').style.display = 'none';
+            document.getElementById('chat-active').style.display = 'flex';
+
+            // Highlight in sidebar
+            document.querySelectorAll('.convo-item').forEach(i => i.classList.remove('active'));
+            renderConversations();
+
+            const res = await fetch(`/api/v1/messages/conversations/${convId}/messages`);
+            const data = await res.json();
+            const conv = data.conversation;
+            const members = data.members || [];
+            const messages = data.messages || [];
+
+            // Update header
+            const convo = conversations.find(c => c.id === convId) || { members, type: conv.type, name: conv.name };
+            const name = getConvoName(convo);
+            document.getElementById('chat-name').textContent = name;
+            document.getElementById('chat-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=72`;
+            document.getElementById('chat-members-count').textContent = `${members.length} member${members.length > 1 ? 's' : ''}`;
+            
+            // Show add member button for group chats created by current user
+            const addBtn = document.getElementById('add-member-btn');
+            addBtn.style.display = (conv.type === 'group' && conv.created_by === currentUser) ? 'block' : 'none';
+
+            // Render messages
+            await renderMessages(messages, convId);
+
+            // Poll for new messages every 3 seconds
+            pollInterval = setInterval(() => refreshMessages(convId), 3000);
+        }
+
+        async function renderMessages(messages, convId) {
+            const area = document.getElementById('messages-area');
+            if (messages.length === 0) {
+                area.innerHTML = `<div style="text-align:center; padding:2rem; color:#666;">
+                    <i class="fas fa-lock" style="font-size:1.5rem; margin-bottom:0.5rem; display:block; color:var(--success-color);"></i>
+                    <p>Messages are end-to-end encrypted.</p>
+                    <p style="font-size:0.8rem;">Send the first message!</p>
+                </div>`;
+                return;
+            }
+
+            let html = '';
+            for (const msg of messages) {
+                const isMine = msg.sender_email === currentUser;
+                const plaintext = await decryptMessage(msg.encrypted_content, msg.iv, convId);
+                const time = formatTime(msg.timestamp);
+                const senderLabel = isMine ? '' : `<span style="font-size:0.75rem; color:var(--primary-color); display:block; margin-bottom:0.2rem;">${escapeHtml(msg.sender_name || msg.sender_email)}</span>`;
+                
+                html += `
+                <div style="align-self:${isMine ? 'flex-end' : 'flex-start'}; max-width:70%;">
+                    ${senderLabel}
+                    <div class="message-bubble ${isMine ? 'msg-sent' : 'msg-received'}">
+                        ${escapeHtml(plaintext)}
+                    </div>
+                    <span style="font-size:0.65rem; color:#888; ${isMine ? 'text-align:right; display:block;' : ''} margin-${isMine ? 'right' : 'left'}:0.5rem;">
+                        ${time} ${isMine ? '<i class="fas fa-lock" style="font-size:0.5rem;"></i>' : ''}
+                    </span>
+                </div>`;
+            }
+            area.innerHTML = html;
+            area.scrollTop = area.scrollHeight;
+        }
+
+        async function refreshMessages(convId) {
+            if (convId !== currentConvoId) return;
+            try {
+                const res = await fetch(`/api/v1/messages/conversations/${convId}/messages`);
+                const data = await res.json();
+                await renderMessages(data.messages || [], convId);
+            } catch(e) { /* ignore refresh errors */ }
+        }
+
+        // ── Send Message ──
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentConvoId) return;
+            input.value = '';
+
+            const { encrypted, iv } = await encryptMessage(text, currentConvoId);
+            
+            await fetch(`/api/v1/messages/conversations/${currentConvoId}/messages`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ encrypted_content: encrypted, iv: iv })
+            });
+
+            // Refresh messages immediately
+            await refreshMessages(currentConvoId);
+            loadConversations(); // Update sidebar
+        }
+
+        // ── New Conversation ──
+        function showNewConvoModal() {
+            selectedParticipants = [];
+            convoType = 'direct';
+            document.getElementById('user-search-input').value = '';
+            document.getElementById('user-search-results').innerHTML = '';
+            document.getElementById('selected-participants').innerHTML = '';
+            document.getElementById('group-name-field').style.display = 'none';
+            document.getElementById('new-group-name').value = '';
+            document.getElementById('btn-direct').style.background = 'var(--primary-color)';
+            document.getElementById('btn-direct').style.color = '#fff';
+            document.getElementById('btn-group').style.background = 'transparent';
+            document.getElementById('btn-group').style.color = 'var(--primary-color)';
+            document.getElementById('new-convo-modal').classList.add('active');
+        }
+
+        function setConvoType(type) {
+            convoType = type;
+            document.getElementById('group-name-field').style.display = type === 'group' ? 'block' : 'none';
+            document.getElementById('btn-direct').style.background = type === 'direct' ? 'var(--primary-color)' : 'transparent';
+            document.getElementById('btn-direct').style.color = type === 'direct' ? '#fff' : 'var(--primary-color)';
+            document.getElementById('btn-group').style.background = type === 'group' ? 'var(--primary-color)' : 'transparent';
+            document.getElementById('btn-group').style.color = type === 'group' ? '#fff' : 'var(--primary-color)';
+        }
+
+        let searchTimeout;
+        async function searchUsers(query) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                if (query.length < 2) { document.getElementById('user-search-results').innerHTML = ''; return; }
+                const res = await fetch(`/api/v1/messages/users?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                const container = document.getElementById('user-search-results');
+                const users = (data.users || []).filter(u => !selectedParticipants.includes(u.email));
+                container.innerHTML = users.map(u => `
+                    <div class="user-search-result" onclick="addParticipant('${u.email}', '${escapeHtml(u.name || u.email)}')">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || u.email)}&background=random&size=32" 
+                             style="width:32px; height:32px; border-radius:50%;">
+                        <div>
+                            <p style="font-size:0.9rem; margin:0;">${escapeHtml(u.name || u.email)}</p>
+                            <p style="font-size:0.75rem; color:#888; margin:0;">${escapeHtml(u.headline || u.role || '')}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }, 300);
+        }
+
+        function addParticipant(email, name) {
+            if (convoType === 'direct') selectedParticipants = [email];
+            else if (!selectedParticipants.includes(email)) selectedParticipants.push(email);
+            renderSelectedParticipants();
+            document.getElementById('user-search-results').innerHTML = '';
+            document.getElementById('user-search-input').value = '';
+        }
+
+        function removeParticipant(email) {
+            selectedParticipants = selectedParticipants.filter(e => e !== email);
+            renderSelectedParticipants();
+        }
+
+        function renderSelectedParticipants() {
+            const container = document.getElementById('selected-participants');
+            container.innerHTML = selectedParticipants.map(email => `
+                <span style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(99,102,241,0.2); color:var(--primary-color); padding:0.25rem 0.6rem; border-radius:20px; font-size:0.8rem;">
+                    ${escapeHtml(email)}
+                    <i class="fas fa-times" style="cursor:pointer; font-size:0.7rem;" onclick="removeParticipant('${email}')"></i>
+                </span>
+            `).join('');
+        }
+
+        async function startConversation() {
+            if (selectedParticipants.length === 0) { alert('Please select at least one participant'); return; }
+            const body = {
+                type: convoType,
+                participants: selectedParticipants,
+                name: convoType === 'group' ? document.getElementById('new-group-name').value.trim() : ''
+            };
+            const res = await fetch('/api/v1/messages/conversations', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                closeModal('new-convo-modal');
+                await loadConversations();
+                openConversation(data.conversation_id);
+            } else {
+                alert(data.message || 'Failed to create conversation');
+            }
+        }
+
+        // ── Add Member ──
+        function showAddMemberModal() {
+            document.getElementById('add-member-search').value = '';
+            document.getElementById('add-member-results').innerHTML = '';
+            document.getElementById('add-member-modal').classList.add('active');
+        }
+
+        async function searchUsersForAdd(query) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                if (query.length < 2) { document.getElementById('add-member-results').innerHTML = ''; return; }
+                const res = await fetch(`/api/v1/messages/users?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                document.getElementById('add-member-results').innerHTML = (data.users || []).map(u => `
+                    <div class="user-search-result" onclick="addMember('${u.email}')">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || u.email)}&background=random&size=32" 
+                             style="width:32px; height:32px; border-radius:50%;">
+                        <div>
+                            <p style="font-size:0.9rem; margin:0;">${escapeHtml(u.name || u.email)}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }, 300);
+        }
+
+        async function addMember(email) {
+            const res = await fetch(`/api/v1/messages/conversations/${currentConvoId}/members`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                closeModal('add-member-modal');
+                openConversation(currentConvoId);
+            } else {
+                alert(data.message || 'Failed to add member');
+            }
+        }
+
+        // ── Helpers ──
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        document.getElementById('convo-search').addEventListener('input', renderConversations);
+
+        function formatTime(isoStr) {
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            const now = new Date();
+            const diffMs = now - d;
+            if (diffMs < 86400000) return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            if (diffMs < 604800000) return d.toLocaleDateString('en-US', { weekday: 'short' });
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

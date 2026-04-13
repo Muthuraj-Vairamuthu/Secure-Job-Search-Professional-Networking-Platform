@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Dashboard - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #1a1a2e; border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 2rem; width: 90%; max-width: 550px; max-height: 85vh; overflow-y: auto;
+        }
+        .modal-content h2 { margin-bottom: 1.5rem; color: #fff; }
+        .tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--glass-border); margin-bottom: 1.5rem; }
+        .tab-btn {
+            background: none; border: none; color: #888; padding: 0.8rem 1.5rem; cursor: pointer;
+            font-size: 0.9rem; font-family: inherit; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+        }
+        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .applicant-card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem;
+        }
+        .status-select {
+            padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+            border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;
+        }
+        .empty-state { text-align: center; padding: 3rem 1rem; color: #666; }
+        .empty-state i { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+        .company-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .company-card:hover { border-color: var(--primary-color); }
+        .company-card.selected { border-color: var(--primary-color); box-shadow: 0 0 15px rgba(99,102,241,0.15); }
+        .match-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .match-high { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .match-mid { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .match-low { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    </style>
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="company.html" class="active"><i class="fas fa-building"></i> Company</a></li>
+                <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Access denied message for non-recruiters -->
+        <div id="access-denied" style="display:none;">
+            <div class="dashboard-card" style="text-align:center; padding: 3rem;">
+                <i class="fas fa-lock" style="font-size: 3rem; color: var(--warning-color); margin-bottom: 1rem;"></i>
+                <h2>Recruiter Access Required</h2>
+                <p style="color: #888; margin-top: 1rem;">You must be logged in as a Recruiter to access company management. Sign up with the Recruiter role to create company pages and post jobs.</p>
+                <a href="auth.html" class="btn-primary" style="display: inline-block; width: auto; padding: 0.75rem 2rem; margin-top: 1.5rem; text-decoration: none;">Go to Login</a>
+            </div>
+        </div>
+
+        <!-- Main recruiter content -->
+        <div id="recruiter-content" style="display:none;">
+            <div class="dashboard-grid" style="grid-template-columns: 1fr 3fr; margin-top: 0;">
+                <!-- Sidebar: My Companies -->
+                <aside>
+                    <div class="dashboard-card" style="margin-bottom: 1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h3 style="margin-bottom:0; border:none; padding:0;"><i class="fas fa-building"></i> My Companies</h3>
+                            <button class="btn-small" onclick="showCreateCompanyModal()"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="company-list">
+                            <div class="empty-state"><i class="fas fa-building"></i><p>No companies yet</p></div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card" id="company-stats" style="display:none;">
+                        <h3>Quick Stats</h3>
+                        <ul style="list-style:none; margin-top:1rem; color:#ccc; font-size:0.9rem;">
+                            <li style="padding:0.5rem 0; display:flex; justify-content:space-between;">
+                                <span>Active Jobs</span><span id="stat-active-jobs">0</span>
+                            </li>
+                            <li style="padding:0.5rem 0; display:flex; justify-content:space-between;">
+                                <span>Total Applicants</span><span id="stat-total-applicants" style="color:var(--success-color);">0</span>
+                            </li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- Main Content: Selected Company -->
+                <div>
+                    <div id="no-company-selected" class="dashboard-card" style="text-align:center; padding:3rem;">
+                        <i class="fas fa-arrow-left" style="font-size:2rem; color:#666; margin-bottom:1rem;"></i>
+                        <p style="color:#888;">Select a company from the sidebar or create a new one.</p>
+                    </div>
+
+                    <div id="company-detail" style="display:none;">
+                        <!-- Company Info -->
+                        <div class="dashboard-card" style="margin-bottom:1.5rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; gap:1rem; align-items:center;">
+                                    <img id="detail-logo" src="" style="width:64px; height:64px; border-radius:12px;">
+                                    <div>
+                                        <h2 id="detail-name" style="margin:0; color:#fff;"></h2>
+                                        <p id="detail-location" style="color:#888; font-size:0.9rem;"></p>
+                                        <a id="detail-website" href="#" style="color:var(--primary-color); font-size:0.85rem;" target="_blank"></a>
+                                    </div>
+                                </div>
+                                <button class="btn-small" onclick="showEditCompanyModal()"><i class="fas fa-edit"></i> Edit</button>
+                            </div>
+                            <p id="detail-description" style="margin-top:1rem; color:#ccc; font-size:0.9rem;"></p>
+                        </div>
+
+                        <!-- Tab bar: Jobs | Applicants -->
+                        <div class="tab-bar">
+                            <button class="tab-btn active" onclick="switchTab('jobs', this)"><i class="fas fa-briefcase"></i> Job Listings</button>
+                            <button class="tab-btn" onclick="switchTab('applicants', this)"><i class="fas fa-users"></i> Applicants</button>
+                        </div>
+
+                        <!-- Jobs Tab -->
+                        <div class="tab-content active" id="tab-jobs">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h3 style="margin:0; color:#fff;">Manage Job Listings</h3>
+                                <button class="btn-primary" style="width:auto;" onclick="showPostJobModal()"><i class="fas fa-plus"></i> Post a Job</button>
+                            </div>
+                            <div id="jobs-list">
+                                <div class="empty-state"><i class="fas fa-briefcase"></i><p>No jobs posted yet</p></div>
+                            </div>
+                        </div>
+
+                        <!-- Applicants Tab -->
+                        <div class="tab-content" id="tab-applicants">
+                            <h3 style="margin-bottom:1rem; color:#fff;">All Applicants</h3>
+                            <div id="applicants-list">
+                                <div class="empty-state"><i class="fas fa-users"></i><p>No applicants yet</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Company Modal -->
+    <div class="modal-overlay" id="create-company-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-building"></i> Create Company</h2>
+            <div class="form-group"><label>Company Name *</label><input type="text" id="new-company-name" placeholder="e.g. Acme Inc."></div>
+            <div class="form-group"><label>Description</label><textarea id="new-company-desc" rows="3" placeholder="What does your company do?" style="width:100%; padding:0.75rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:6px; color:#fff; font-family:var(--font-main);"></textarea></div>
+            <div class="form-group"><label>Location</label><input type="text" id="new-company-location" placeholder="e.g. San Francisco, CA"></div>
+            <div class="form-group"><label>Website</label><input type="text" id="new-company-website" placeholder="e.g. https://acme.com"></div>
+            <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                <button class="btn-primary" onclick="createCompany()">Create Company</button>
+                <button class="btn-small" onclick="closeModal('create-company-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Job Modal -->
+    <div class="modal-overlay" id="post-job-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-briefcase"></i> Post a Job</h2>
+            <div class="form-group"><label>Job Title *</label><input type="text" id="new-job-title" placeholder="e.g. Senior Frontend Engineer"></div>
+            <div class="form-group"><label>Description</label><textarea id="new-job-desc" rows="4" placeholder="Job description, responsibilities, requirements..." style="width:100%; padding:0.75rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:6px; color:#fff; font-family:var(--font-main);"></textarea></div>
+            <div class="form-group"><label>Required Skills</label><input type="text" id="new-job-skills" placeholder="e.g. React, Python, AWS (comma separated)"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-group"><label>Location</label><input type="text" id="new-job-location" placeholder="e.g. Remote"></div>
+                <div class="form-group">
+                    <label>Job Type</label>
+                    <select id="new-job-type" style="width:100%; padding:0.75rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:6px; color:#fff;">
+                        <option value="full-time">Full-time</option>
+                        <option value="part-time">Part-time</option>
+                        <option value="internship">Internship</option>
+                        <option value="contract">Contract</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-group"><label>Salary Min ($)</label><input type="number" id="new-job-salary-min" placeholder="e.g. 80000"></div>
+                <div class="form-group"><label>Salary Max ($)</label><input type="number" id="new-job-salary-max" placeholder="e.g. 120000"></div>
+            </div>
+            <div class="form-group"><label>Application Deadline</label><input type="date" id="new-job-deadline" style="color-scheme: dark;"></div>
+            <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                <button class="btn-primary" onclick="postJob()">Post Job</button>
+                <button class="btn-small" onclick="closeModal('post-job-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Company Modal -->
+    <div class="modal-overlay" id="edit-company-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-edit"></i> Edit Company</h2>
+            <div class="form-group"><label>Company Name</label><input type="text" id="edit-company-name"></div>
+            <div class="form-group"><label>Description</label><textarea id="edit-company-desc" rows="3" style="width:100%; padding:0.75rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:6px; color:#fff; font-family:var(--font-main);"></textarea></div>
+            <div class="form-group"><label>Location</label><input type="text" id="edit-company-location"></div>
+            <div class="form-group"><label>Website</label><input type="text" id="edit-company-website"></div>
+            <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                <button class="btn-primary" onclick="updateCompany()">Save Changes</button>
+                <button class="btn-small" onclick="closeModal('edit-company-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+    <script>
+        let selectedCompanyId = null;
+        let companiesData = [];
+        let userRole = '';
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/v1/users/me');
+                if (res.status === 401) { window.location.href = 'auth.html'; return; }
+                const data = await res.json();
+                userRole = data.role;
+                if (data.role !== 'recruiter') {
+                    document.getElementById('access-denied').style.display = 'block';
+                    return;
+                }
+                document.getElementById('recruiter-content').style.display = 'block';
+                loadCompanies();
+            } catch (e) {
+                console.error(e);
+                window.location.href = 'auth.html';
+            }
+        });
+
+        // ── Load Companies ──
+        async function loadCompanies() {
+            const res = await fetch('/api/v1/companies/me');
+            const data = await res.json();
+            companiesData = data.companies || [];
+            const container = document.getElementById('company-list');
+            if (companiesData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><p>No companies yet. Create one!</p></div>';
+                return;
+            }
+            container.innerHTML = companiesData.map(c => `
+                <div class="company-card ${selectedCompanyId === c.id ? 'selected' : ''}" onclick="selectCompany(${c.id})">
+                    <div style="display:flex; gap:0.8rem; align-items:center;">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=random&size=48" 
+                             style="width:40px; height:40px; border-radius:8px;">
+                        <div>
+                            <h4 style="margin:0; font-size:0.95rem;">${escapeHtml(c.name)}</h4>
+                            <p style="font-size:0.75rem; color:#888;">${c.total_jobs || 0} jobs</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ── Select Company ──
+        async function selectCompany(id) {
+            selectedCompanyId = id;
+            document.getElementById('no-company-selected').style.display = 'none';
+            document.getElementById('company-detail').style.display = 'block';
+            document.getElementById('company-stats').style.display = 'block';
+            
+            // Highlight selected
+            document.querySelectorAll('.company-card').forEach(c => c.classList.remove('selected'));
+            try {
+                if (typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList) {
+                    event.currentTarget.classList.add('selected');
+                } else {
+                    // Fallback to find by child text if needed, or re-render 
+                    loadCompanies(); // This will re-select the correct one anyway
+                }
+            } catch(e) {}
+            
+            const res = await fetch(`/api/v1/companies/${id}`);
+            const data = await res.json();
+            const co = data.company;
+            const jobs = data.jobs || [];
+
+            document.getElementById('detail-name').textContent = co.name;
+            document.getElementById('detail-location').textContent = co.location || 'No location set';
+            document.getElementById('detail-website').textContent = co.website || '';
+            document.getElementById('detail-website').href = co.website || '#';
+            document.getElementById('detail-description').textContent = co.description || 'No description added.';
+            document.getElementById('detail-logo').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(co.name)}&background=random&size=128`;
+
+            // Stats
+            const activeJobs = jobs.filter(j => j.status === 'active').length;
+            document.getElementById('stat-active-jobs').textContent = activeJobs;
+
+            // Render jobs
+            renderJobs(jobs);
+            // Load applicants
+            loadAllApplicants(jobs);
+            // Reload sidebar to update counts
+            loadCompanies();
+        }
+
+        function renderJobs(jobs) {
+            const container = document.getElementById('jobs-list');
+            if (jobs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-briefcase"></i><p>No jobs posted yet. Post your first job!</p></div>';
+                return;
+            }
+            container.innerHTML = jobs.map(j => {
+                const statusClass = j.status === 'active' ? 'badge-success' : 'badge-danger';
+                return `
+                <div class="dashboard-card" style="margin-bottom:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <h4 style="margin:0 0 0.3rem 0; color:var(--primary-color);">${escapeHtml(j.title)}</h4>
+                            <p style="font-size:0.85rem; color:#888;">
+                                <i class="fas fa-map-marker-alt"></i> ${escapeHtml(j.location || 'Not specified')} • ${escapeHtml(j.job_type)}
+                                ${j.salary_min ? ` • $${Number(j.salary_min).toLocaleString()}${j.salary_max ? ' - $' + Number(j.salary_max).toLocaleString() : ''}` : ''}
+                            </p>
+                            ${j.skills ? `<div style="margin-top:0.4rem;">${j.skills.split(',').map(s => `<span class="badge badge-info" style="margin-right:0.3rem;">${escapeHtml(s.trim())}</span>`).join('')}</div>` : ''}
+                        </div>
+                        <div style="text-align:right; flex-shrink:0;">
+                            <span class="badge ${statusClass}">${j.status}</span>
+                            <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+                                <button class="btn-small" onclick="toggleJobStatus(${j.id}, '${j.status}')" title="${j.status === 'active' ? 'Close' : 'Reopen'} job">
+                                    <i class="fas fa-${j.status === 'active' ? 'pause' : 'play'}"></i>
+                                </button>
+                                <button class="btn-small" style="border-color:var(--danger-color); color:var(--danger-color);" onclick="deleteJob(${j.id})" title="Delete job">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadAllApplicants(jobs) {
+            const container = document.getElementById('applicants-list');
+            let allApplicants = [];
+            let totalCount = 0;
+            for (const job of jobs) {
+                try {
+                    const res = await fetch(`/api/v1/applications/job/${job.id}`);
+                    const data = await res.json();
+                    if (data.applicants) {
+                        data.applicants.forEach(a => {
+                            a.job_title = job.title;
+                            allApplicants.push(a);
+                        });
+                        totalCount += data.applicants.length;
+                    }
+                } catch(e) { console.error(e); }
+            }
+            document.getElementById('stat-total-applicants').textContent = totalCount;
+
+            if (allApplicants.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>No applicants yet</p></div>';
+                return;
+            }
+            container.innerHTML = allApplicants.map(a => `
+                <div class="applicant-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; gap:0.8rem; align-items:center;">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(a.applicant_name || a.applicant_email)}&background=random" 
+                                 style="width:40px; height:40px; border-radius:50%;">
+                            <div>
+                                <h4 style="margin:0; font-size:0.95rem;">${escapeHtml(a.applicant_name || a.applicant_email)}</h4>
+                                <p style="font-size:0.8rem; color:#888;">Applied for ${escapeHtml(a.job_title)}</p>
+                                ${a.applicant_headline ? `<p style="font-size:0.75rem; color:#aaa;">${escapeHtml(a.applicant_headline)}</p>` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="match-pill ${matchClass(a.resume_match_score)}">
+                                <i class="fas fa-bullseye"></i> ${a.resume_match_score ?? 0}% match
+                            </span>
+                            ${a.resume_id ? `
+                                <div style="margin-top:0.45rem;">
+                                    <button class="btn-small" onclick="downloadApplicantResume('${a.resume_id}')" style="border-color: var(--primary-color); color: var(--primary-color);">
+                                        <i class="fas fa-file-download"></i> Resume
+                                    </button>
+                                </div>
+                            ` : ''}
+                            <select class="status-select" onchange="updateAppStatus(${a.id}, this.value)">
+                                ${['Applied','Reviewed','Interviewed','Rejected','Offer'].map(s => 
+                                    `<option value="${s}" ${a.status === s ? 'selected' : ''}>${s}</option>`
+                                ).join('')}
+                            </select>
+                            ${a.cover_note ? `<p style="font-size:0.7rem; color:#888; margin-top:0.3rem; max-width:200px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${escapeHtml(a.cover_note)}">"${escapeHtml(a.cover_note)}"</p>` : ''}
+                        </div>
+                    </div>
+                    ${(a.matched_skills || []).length ? `
+                        <div style="margin-top:0.8rem;">
+                            <p style="font-size:0.78rem; color:#9ca3af; margin-bottom:0.35rem;">Matched skills</p>
+                            ${(a.matched_skills || []).map(s => `<span class="badge badge-success" style="margin-right:0.3rem; margin-bottom:0.3rem;">${escapeHtml(s)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${(a.missing_skills || []).length ? `
+                        <div style="margin-top:0.6rem;">
+                            <p style="font-size:0.78rem; color:#9ca3af; margin-bottom:0.35rem;">Missing skills</p>
+                            ${(a.missing_skills || []).map(s => `<span class="badge badge-danger" style="margin-right:0.3rem; margin-bottom:0.3rem;">${escapeHtml(s)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // ── Actions ──
+        async function createCompany() {
+            const name = document.getElementById('new-company-name').value.trim();
+            if (!name) { alert('Company name is required'); return; }
+            const res = await fetch('/api/v1/companies', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name,
+                    description: document.getElementById('new-company-desc').value.trim(),
+                    location: document.getElementById('new-company-location').value.trim(),
+                    website: document.getElementById('new-company-website').value.trim()
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                closeModal('create-company-modal');
+                await loadCompanies();
+                selectCompany(data.company_id);
+            } else {
+                alert(data.message || 'Failed to create company');
+            }
+        }
+
+        async function postJob() {
+            const title = document.getElementById('new-job-title').value.trim();
+            if (!title) { alert('Job title is required'); return; }
+            const res = await fetch('/api/v1/jobs', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    company_id: selectedCompanyId,
+                    title,
+                    description: document.getElementById('new-job-desc').value.trim(),
+                    skills: document.getElementById('new-job-skills').value.trim(),
+                    location: document.getElementById('new-job-location').value.trim(),
+                    job_type: document.getElementById('new-job-type').value,
+                    salary_min: parseInt(document.getElementById('new-job-salary-min').value) || null,
+                    salary_max: parseInt(document.getElementById('new-job-salary-max').value) || null,
+                    deadline: document.getElementById('new-job-deadline').value
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                closeModal('post-job-modal');
+                selectCompany(selectedCompanyId);
+            } else {
+                alert(data.message || 'Failed to post job');
+            }
+        }
+
+        async function toggleJobStatus(jobId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'closed' : 'active';
+            await fetch(`/api/v1/jobs/${jobId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status: newStatus })
+            });
+            selectCompany(selectedCompanyId);
+        }
+
+        async function deleteJob(jobId) {
+            if (!confirm('Are you sure you want to delete this job? All applications will also be removed.')) return;
+            await fetch(`/api/v1/jobs/${jobId}`, { method: 'DELETE' });
+            selectCompany(selectedCompanyId);
+        }
+
+        async function updateAppStatus(appId, newStatus) {
+            await fetch(`/api/v1/applications/${appId}/status`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status: newStatus })
+            });
+        }
+
+        async function updateCompany() {
+            const res = await fetch(`/api/v1/companies/${selectedCompanyId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: document.getElementById('edit-company-name').value.trim(),
+                    description: document.getElementById('edit-company-desc').value.trim(),
+                    location: document.getElementById('edit-company-location').value.trim(),
+                    website: document.getElementById('edit-company-website').value.trim()
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                closeModal('edit-company-modal');
+                selectCompany(selectedCompanyId);
+                loadCompanies();
+            } else {
+                alert(data.message || 'Failed to update company');
+            }
+        }
+
+        function downloadApplicantResume(resumeId) {
+            window.open(`/api/v1/users/resumes/${resumeId}/download`, '_blank');
+        }
+
+        // ── Modals ──
+        function showCreateCompanyModal() {
+            document.getElementById('new-company-name').value = '';
+            document.getElementById('new-company-desc').value = '';
+            document.getElementById('new-company-location').value = '';
+            document.getElementById('new-company-website').value = '';
+            document.getElementById('create-company-modal').classList.add('active');
+        }
+        function showPostJobModal() {
+            document.getElementById('new-job-title').value = '';
+            document.getElementById('new-job-desc').value = '';
+            document.getElementById('new-job-skills').value = '';
+            document.getElementById('new-job-location').value = '';
+            document.getElementById('new-job-salary-min').value = '';
+            document.getElementById('new-job-salary-max').value = '';
+            document.getElementById('new-job-deadline').value = '';
+            document.getElementById('post-job-modal').classList.add('active');
+        }
+        function showEditCompanyModal() {
+            const co = companiesData.find(c => c.id === selectedCompanyId);
+            if (!co) return;
+            document.getElementById('edit-company-name').value = co.name || '';
+            document.getElementById('edit-company-desc').value = co.description || '';
+            document.getElementById('edit-company-location').value = co.location || '';
+            document.getElementById('edit-company-website').value = co.website || '';
+            document.getElementById('edit-company-modal').classList.add('active');
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+        function matchClass(score) {
+            if ((score ?? 0) >= 75) return 'match-high';
+            if ((score ?? 0) >= 40) return 'match-mid';
+            return 'match-low';
+        }
+    </script>
+</body>
+
+</html>

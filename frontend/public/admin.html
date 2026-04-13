@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 6rem auto 2rem;
+            padding: 0 1.5rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 0.3rem;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--glass-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #888;
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: inherit;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-btn:hover {
+            color: #ccc;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.8rem;
+            color: #888;
+            font-weight: 600;
+            border-bottom: 1px solid var(--glass-border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: #ccc;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .badge-sm {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .badge-yellow {
+            background: rgba(234, 179, 8, 0.15);
+            color: #eab308;
+        }
+
+        .badge-blue {
+            background: rgba(99, 102, 241, 0.15);
+            color: #6366f1;
+        }
+
+        .badge-gray {
+            background: rgba(156, 163, 175, 0.15);
+            color: #9ca3af;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="profile.html"><i class="fas fa-user-circle"></i> Profile</a></li>
+                <li><a href="admin.html" class="active"><i class="fas fa-shield-alt"></i> Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-shield-alt" style="margin-right: 0.5rem;"></i>Admin Panel</h1>
+            <button class="btn-small" onclick="loadDashboard()"
+                style="border-color: var(--primary-color); color: var(--primary-color);">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-users">-</div>
+                <div class="stat-label">Registered Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-sessions">-</div>
+                <div class="stat-label">Active Sessions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-resumes">-</div>
+                <div class="stat-label">Uploaded Resumes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-companies">-</div>
+                <div class="stat-label">Companies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-jobs">-</div>
+                <div class="stat-label">Job Postings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-apps">-</div>
+                <div class="stat-label">Applications</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-events">-</div>
+                <div class="stat-label">Audit Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-blocks">-</div>
+                <div class="stat-label">Audit Blocks</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('users', this)"><i class="fas fa-users"></i> Users</button>
+            <button class="tab-btn" onclick="switchTab('companies', this)"><i class="fas fa-building"></i> Companies</button>
+            <button class="tab-btn" onclick="switchTab('jobs', this)"><i class="fas fa-briefcase"></i> Jobs</button>
+            <button class="tab-btn" onclick="switchTab('applications', this)"><i class="fas fa-file-alt"></i> Applications</button>
+            <button class="tab-btn" onclick="switchTab('audit', this)"><i class="fas fa-clipboard-list"></i> Audit Log</button>
+            <button class="tab-btn" onclick="switchTab('resumes', this)"><i class="fas fa-file-pdf"></i> Resumes</button>
+            <button class="tab-btn" onclick="switchTab('sessions', this)"><i class="fas fa-key"></i> Sessions</button>
+        </div>
+
+        <!-- Users Tab -->
+        <div class="tab-content active" id="tab-users">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>MFA</th>
+                            <th>Failed Attempts</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Audit Log Tab -->
+        <div class="tab-content" id="tab-audit">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; gap:1rem; flex-wrap:wrap;">
+                <div id="audit-verify-status" style="font-size:0.9rem; color:#888;">Blockchain verification not run yet.</div>
+                <button class="btn-small" onclick="verifyAuditBlockchain()" style="border-color: var(--primary-color); color: var(--primary-color);">
+                    <i class="fas fa-link"></i> Verify Blockchain
+                </button>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Email</th>
+                            <th>Event</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Resumes Tab -->
+        <div class="tab-content" id="tab-resumes">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Resume ID</th>
+                            <th>Owner</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Visibility</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resumes-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Companies Tab -->
+        <div class="tab-content" id="tab-companies">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Owner</th>
+                            <th>Jobs</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="companies-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Jobs Tab -->
+        <div class="tab-content" id="tab-jobs">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Company</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobs-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Applications Tab -->
+        <div class="tab-content" id="tab-applications">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Applicant</th>
+                            <th>Job</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                            <th>Applied</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sessions Tab -->
+        <div class="tab-content" id="tab-sessions">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessions-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/script.js"></script>
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function eventBadge(evt) {
+            if (evt.includes('SUCCESS')) return `<span class="badge-sm badge-green">${evt}</span>`;
+            if (evt.includes('FAIL') || evt.includes('REJECTED') || evt.includes('RATE_LIMIT')) return `<span class="badge-sm badge-red">${evt}</span>`;
+            if (evt.includes('ATTEMPT')) return `<span class="badge-sm badge-yellow">${evt}</span>`;
+            if (evt.includes('DELETE')) return `<span class="badge-sm badge-gray">${evt}</span>`;
+            return `<span class="badge-sm badge-blue">${evt}</span>`;
+        }
+
+        function formatTime(isoStr) {
+            if (!isoStr) return '-';
+            try {
+                const d = new Date(isoStr);
+                return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            } catch { return isoStr; }
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch('/api/v1/admin/dashboard');
+                if (res.status === 401) { window.location.href = 'auth.html'; return; }
+                if (res.status === 403) {
+                    alert('Forbidden. Admins only.');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+                const data = await res.json();
+                if (data.status !== 'success') { alert('Failed to load admin data'); return; }
+
+                // Stats
+                document.getElementById('stat-users').textContent = data.users.length;
+                document.getElementById('stat-sessions').textContent = data.active_sessions.length;
+                document.getElementById('stat-resumes').textContent = data.resumes.length;
+                document.getElementById('stat-companies').textContent = (data.companies || []).length;
+                document.getElementById('stat-jobs').textContent = (data.jobs || []).length;
+                document.getElementById('stat-apps').textContent = (data.applications || []).length;
+                document.getElementById('stat-events').textContent = data.audit_logs.length;
+                document.getElementById('stat-blocks').textContent = (data.audit_blocks || []).length;
+
+                // Users table
+                const usersTbody = document.getElementById('users-tbody');
+                if (data.users.length === 0) {
+                    usersTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#666;">No users yet</td></tr>';
+                } else {
+                    usersTbody.innerHTML = data.users.map(u => {
+                        const locked = u.locked_until && new Date(u.locked_until) > new Date();
+                        const statusBadge = locked
+                            ? '<span class="badge-sm badge-red"><i class="fas fa-lock"></i> Suspended</span>'
+                            : '<span class="badge-sm badge-green"><i class="fas fa-check"></i> Active</span>';
+                        const mfaBadge = u.mfa_enabled
+                            ? '<span class="badge-sm badge-green">Enabled</span>'
+                            : '<span class="badge-sm badge-gray">Off</span>';
+                        const suspendButton = locked
+                            ? `<button class="btn-small" onclick="unsuspendUser(${u.id}, '${u.email}')" style="border-color: var(--success-color); color: var(--success-color);">Unsuspend</button>`
+                            : `<button class="btn-small" onclick="suspendUser(${u.id}, '${u.email}')" style="border-color: #f59e0b; color: #f59e0b;">Suspend</button>`;
+                        const deleteButton = `<button class="btn-small" onclick="deleteUser(${u.id}, '${u.email}')" style="border-color: #ef4444; color: #ef4444;">Delete</button>`;
+                        return `<tr>
+                            <td>${u.id}</td>
+                            <td>${u.email}</td>
+                            <td>${u.name || '-'}</td>
+                            <td><span class="badge-sm badge-blue">${u.role}</span></td>
+                            <td>${mfaBadge}</td>
+                            <td>${u.failed_attempts}</td>
+                            <td>${statusBadge}</td>
+                            <td style="white-space: nowrap; display: flex; gap: 0.4rem;">${suspendButton}${deleteButton}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Audit logs
+                const auditTbody = document.getElementById('audit-tbody');
+                if (data.audit_logs.length === 0) {
+                    auditTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2rem; color:#666;">No audit events</td></tr>';
+                } else {
+                    auditTbody.innerHTML = data.audit_logs.map(a => `<tr>
+                        <td style="white-space:nowrap;">${formatTime(a.timestamp)}</td>
+                        <td>${a.email}</td>
+                        <td>${eventBadge(a.event)}</td>
+                        <td><code style="font-size:0.8rem;">${a.ip_address}</code></td>
+                    </tr>`).join('');
+                }
+
+                // Resumes
+                const resumesTbody = document.getElementById('resumes-tbody');
+                if (data.resumes.length === 0) {
+                    resumesTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#666;">No resumes uploaded</td></tr>';
+                } else {
+                    resumesTbody.innerHTML = data.resumes.map(r => {
+                        const sizeKB = (r.file_size / 1024).toFixed(1);
+                        return `<tr>
+                            <td><code style="font-size:0.8rem;">${r.resume_id.substring(0, 8)}…</code></td>
+                            <td>${r.owner_name || r.owner_user_id}</td>
+                            <td>${r.original_ext}</td>
+                            <td>${sizeKB} KB</td>
+                            <td style="white-space:nowrap;">${formatTime(r.upload_timestamp)}</td>
+                            <td><span class="badge-sm ${r.visibility === 'public' ? 'badge-green' : 'badge-gray'}">${r.visibility}</span></td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Sessions
+                const sessionsTbody = document.getElementById('sessions-tbody');
+                if (data.active_sessions.length === 0) {
+                    sessionsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:#666;">No active sessions</td></tr>';
+                } else {
+                    sessionsTbody.innerHTML = data.active_sessions.map(s => {
+                        const expired = new Date(s.expires_at) < new Date();
+                        const statusBadge = expired
+                            ? '<span class="badge-sm badge-red">Expired</span>'
+                            : '<span class="badge-sm badge-green">Active</span>';
+                        return `<tr>
+                            <td>${s.user_id}</td>
+                            <td><span class="badge-sm badge-blue">${s.role}</span></td>
+                            <td style="white-space:nowrap;">${formatTime(s.created_at)}</td>
+                            <td style="white-space:nowrap;">${formatTime(s.expires_at)}</td>
+                            <td>${statusBadge}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Companies
+                const companiesTbody = document.getElementById('companies-tbody');
+                const companies = data.companies || [];
+                if (companies.length === 0) {
+                    companiesTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#666;">No companies</td></tr>';
+                } else {
+                    companiesTbody.innerHTML = companies.map(c => `<tr>
+                        <td>${c.id}</td>
+                        <td><strong>${c.name}</strong></td>
+                        <td>${c.location || '-'}</td>
+                        <td>${c.owner_name || c.owner_email}</td>
+                        <td><span class="badge-sm badge-blue">${c.total_jobs} jobs</span></td>
+                        <td style="white-space:nowrap;">${formatTime(c.created_at)}</td>
+                    </tr>`).join('');
+                }
+
+                // Jobs
+                const jobsTbody = document.getElementById('jobs-tbody');
+                const jobs = data.jobs || [];
+                if (jobs.length === 0) {
+                    jobsTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem; color:#666;">No jobs</td></tr>';
+                } else {
+                    jobsTbody.innerHTML = jobs.map(j => {
+                        const statusBadge = j.status === 'active'
+                            ? '<span class="badge-sm badge-green">Active</span>'
+                            : '<span class="badge-sm badge-red">Closed</span>';
+                        return `<tr>
+                            <td>${j.id}</td>
+                            <td>${j.title}</td>
+                            <td>${j.company_name}</td>
+                            <td><span class="badge-sm badge-blue">${j.job_type}</span></td>
+                            <td>${j.location || '-'}</td>
+                            <td>${statusBadge}</td>
+                            <td style="white-space:nowrap;">${formatTime(j.created_at)}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Applications
+                const appsTbody = document.getElementById('applications-tbody');
+                const apps = data.applications || [];
+                if (apps.length === 0) {
+                    appsTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#666;">No applications</td></tr>';
+                } else {
+                    appsTbody.innerHTML = apps.map(a => {
+                        const statusClasses = {
+                            'Applied': 'badge-blue', 'Reviewed': 'badge-yellow',
+                            'Interviewed': 'badge-blue', 'Rejected': 'badge-red', 'Offer': 'badge-green'
+                        };
+                        return `<tr>
+                            <td>${a.id}</td>
+                            <td>${a.applicant_name || a.applicant_email}</td>
+                            <td>${a.job_title}</td>
+                            <td>${a.company_name}</td>
+                            <td><span class="badge-sm ${statusClasses[a.status] || 'badge-gray'}">${a.status}</span></td>
+                            <td style="white-space:nowrap;">${formatTime(a.applied_at)}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+            } catch (e) {
+                console.error('Admin load error:', e);
+                alert('Failed to load admin dashboard.');
+            }
+        }
+
+        async function suspendUser(userId, email) {
+            if (!confirm(`Suspend ${email}?`)) return;
+            const res = await fetch(`/api/v1/admin/users/${userId}/suspend`, { method: 'PUT' });
+            const data = await res.json();
+            if (data.status !== 'success') {
+                alert(data.message || 'Failed to suspend user.');
+                return;
+            }
+            await loadDashboard();
+        }
+
+        async function unsuspendUser(userId, email) {
+            if (!confirm(`Unsuspend ${email}?`)) return;
+            const res = await fetch(`/api/v1/admin/users/${userId}/unsuspend`, { method: 'PUT' });
+            const data = await res.json();
+            if (data.status !== 'success') {
+                alert(data.message || 'Failed to unsuspend user.');
+                return;
+            }
+            await loadDashboard();
+        }
+
+        async function deleteUser(userId, email) {
+            if (!confirm(`Delete ${email}? This also removes their resumes, sessions, applications, and memberships.`)) return;
+            const res = await fetch(`/api/v1/admin/users/${userId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.status !== 'success') {
+                alert(data.message || 'Failed to delete user.');
+                return;
+            }
+            await loadDashboard();
+        }
+
+        async function verifyAuditBlockchain() {
+            const res = await fetch('/api/v1/admin/audit/verify');
+            const data = await res.json();
+            const statusEl = document.getElementById('audit-verify-status');
+            if (data.status !== 'success') {
+                statusEl.textContent = data.message || 'Verification failed.';
+                statusEl.style.color = '#ef4444';
+                return;
+            }
+
+            const ok = data.chain_valid && data.blockchain_valid;
+            statusEl.textContent = ok
+                ? `Verified: ${data.total_entries} log entries across ${data.total_blocks} blocks.`
+                : `Problems found: ${data.broken_links.length} log breaks, ${data.broken_blocks.length} block breaks.`;
+            statusEl.style.color = ok ? '#22c55e' : '#ef4444';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+
+</html>

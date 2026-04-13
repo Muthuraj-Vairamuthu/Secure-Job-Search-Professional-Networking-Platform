@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - FCS GROUP 19</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <header class="glass-header">
+        <nav>
+            <a href="dashboard.html" class="logo">FCS GROUP 19</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="network.html"><i class="fas fa-users"></i> Network</a></li>
+                <li><a href="jobs.html"><i class="fas fa-briefcase"></i> Jobs</a></li>
+                <li><a href="messages.html"><i class="fas fa-comment-dots"></i> Messaging</a></li>
+                <li><a href="profile.html" class="active"><i class="fas fa-user-circle"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-card" style="position: relative; margin-bottom: 2rem;">
+            <!-- Cover Photo -->
+            <div
+                style="height: 150px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 12px 12px 0 0; margin: -1.5rem -1.5rem 0 -1.5rem;">
+            </div>
+
+            <!-- Profile Info -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: -50px; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border);">
+                <div style="display: flex; gap: 1.5rem; align-items: flex-end;">
+                    <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&background=random&size=128"
+                        alt="Profile"
+                        style="width: 128px; height: 128px; border-radius: 50%; border: 4px solid var(--bg-color);">
+                    <div style="margin-bottom: 0.5rem;">
+                        <h2 id="profile-name" style="font-size: 1.8rem; margin: 0;">Loading...</h2>
+                        <p id="profile-headline" style="color: #a0a0a0;"></p>
+                        <p id="profile-role"
+                            style="font-size: 0.85rem; color: var(--primary-color); margin-top: 0.2rem;"></p>
+                        <p id="profile-location" style="font-size: 0.9rem; color: #888;"><i
+                                class="fas fa-map-marker-alt"></i></p>
+                        <p id="profile-email" style="font-size: 0.9rem; color: #888;"><i class="fas fa-envelope"></i>
+                        </p>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn-small" onclick="window.location.href='edit_profile.html'"><i
+                            class="fas fa-pen"></i> Edit Profile</button>
+                    <button class="btn-small" onclick="document.getElementById('resume-upload').click()"
+                        style="border-color: var(--success-color); color: var(--success-color);">
+                        <i class="fas fa-file-upload"></i> Add Resume
+                    </button>
+                    <input type="file" id="resume-upload" accept=".pdf,.doc,.docx" style="display:none;"
+                        onchange="handleResumeUpload(this)">
+                    <button class="btn-small" onclick="handleLogout()"
+                        style="border-color: var(--danger-color, #ef4444); color: var(--danger-color, #ef4444);">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Privacy Controls -->
+            <div
+                style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center; background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 8px;">
+                <span class="badge badge-info"><i class="fas fa-shield-alt"></i> Privacy Control</span>
+                <select id="privacy-select" onchange="updatePrivacy(this.value)"
+                    style="background: transparent; border: 1px solid var(--glass-border); color: #fff; padding: 0.3rem; border-radius: 4px;">
+                    <option value="public">Profile Visibility: Public</option>
+                    <option value="connections">Profile Visibility: Connections Only</option>
+                    <option value="private">Profile Visibility: Private</option>
+                </select>
+                <span id="privacy-save-status" style="font-size: 0.8rem; color: #888;">Controls who can see your full profile details.</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; margin-top: 0;">
+            <!-- Left Column: Details -->
+            <div>
+                <!-- My Resumes Section -->
+                <section class="dashboard-card" style="margin-bottom: 2rem;">
+                    <h3><i class="fas fa-file-alt" style="margin-right: 0.4rem;"></i> My Resumes</h3>
+                    <div id="resumes-list" style="margin-top: 1rem;">
+                        <p style="color: #888; font-size: 0.9rem;">Loading resumes...</p>
+                    </div>
+                </section>
+
+                <section class="dashboard-card" style="margin-bottom: 2rem;">
+                    <h3>About</h3>
+                    <p id="profile-bio" style="color: #ccc; margin-top: 1rem;">
+                        No bio set yet. Edit your profile to add one.
+                    </p>
+                </section>
+
+                <section class="dashboard-card" style="margin-bottom: 2rem;">
+                    <h3>Experience</h3>
+                    <div id="profile-experience-empty" style="color: #888; margin-top: 1rem;">
+                        No experience entries added yet.
+                    </div>
+                </section>
+
+                <section class="dashboard-card">
+                    <h3>Education</h3>
+                    <div id="profile-education-empty" style="color: #888; margin-top: 1rem;">
+                        No education entries added yet.
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Skills & Stats -->
+            <aside>
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <h3>Skills</h3>
+                    <div id="profile-skills" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+                        <span style="color: #888; font-size: 0.9rem;">Upload a resume to extract and display skills.</span>
+                    </div>
+                </div>
+
+                <!-- Password Change (OTP-gated) -->
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <h3><i class="fas fa-key" style="margin-right: 0.4rem;"></i> Change Password</h3>
+                    <div style="margin-top: 1rem;">
+                        <div class="form-group" style="margin-bottom: 0.8rem;">
+                            <input type="password" id="current-password" placeholder="Current password"
+                                style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0.8rem;">
+                            <input type="password" id="new-password" placeholder="New password"
+                                style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;">
+                        </div>
+                        <button class="btn-small" style="width: 100%; border-color: var(--primary-color); color: var(--primary-color);" onclick="handlePasswordChange()">
+                            <i class="fas fa-keyboard" style="margin-right: 0.3rem;"></i> Change (OTP Required)
+                        </button>
+                        <p id="password-change-status" style="font-size: 0.8rem; color: #888; margin-top: 0.5rem; text-align: center;"></p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Analytics</h3>
+                    <p id="views-count" style="font-size: 0.9rem; color: #888; margin-top: 0.5rem;"><i class="fas fa-eye"></i> Loading...</p>
+                    <div id="recent-viewers" style="margin-top: 0.5rem;"></div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                        <label id="show-views-label"
+                            style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+                            <input type="checkbox" id="show-views-toggle" checked onchange="updateShowViews(this.checked)"> Allow viewers to see I viewed them
+                        </label>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/virtual-keyboard.js"></script>
+    <script>
+        // Load profile data on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Fetch user profile
+                const profileRes = await fetch('/api/v1/users/me');
+                if (profileRes.status === 401) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                const profile = await profileRes.json();
+                if (profile.status === 'success') {
+                    const name = profile.name || 'User';
+                    document.getElementById('profile-name').textContent = name;
+                    document.getElementById('profile-headline').textContent = profile.headline || '';
+                    document.getElementById('profile-role').textContent =
+                        profile.role === 'recruiter' ? 'Recruiter / Employer' : 'Job Seeker';
+                    if (profile.location) {
+                        document.getElementById('profile-location').innerHTML =
+                            `<i class="fas fa-map-marker-alt"></i> ${profile.location}`;
+                    } else {
+                        document.getElementById('profile-location').style.display = 'none';
+                    }
+                    document.getElementById('profile-email').innerHTML =
+                        `<i class="fas fa-envelope"></i> ${profile.email}`;
+                    if (profile.bio) {
+                        document.getElementById('profile-bio').textContent = profile.bio;
+                    }
+                    document.getElementById('profile-avatar').src =
+                        profile.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=128`;
+
+                    renderListSection('profile-experience-empty', profile.experience, 'No experience entries added yet.');
+                    renderListSection('profile-education-empty', profile.education, 'No education entries added yet.');
+                }
+
+                // Fetch resumes
+                await loadResumes();
+
+                // Set privacy dropdown
+                const privSelect = document.getElementById('privacy-select');
+                if (profile.privacy_profile) {
+                    privSelect.value = profile.privacy_profile;
+                }
+
+                // Set show_profile_views toggle
+                const showViewsToggle = document.getElementById('show-views-toggle');
+                showViewsToggle.checked = profile.show_profile_views !== false;
+
+                // Load profile views
+                await loadProfileViews();
+            } catch (e) {
+                console.error('Failed to load profile:', e);
+            }
+        });
+
+        async function loadResumes() {
+            try {
+                const res = await fetch('/api/v1/users/resumes');
+                const data = await res.json();
+                const container = document.getElementById('resumes-list');
+                const skillsContainer = document.getElementById('profile-skills');
+
+                if (data.status === 'success' && data.resumes.length > 0) {
+                    const skillSet = [];
+                    data.resumes.forEach(r => {
+                        (r.parsed_skills || []).forEach(skill => {
+                            if (!skillSet.includes(skill)) skillSet.push(skill);
+                        });
+                    });
+
+                    if (skillSet.length > 0) {
+                        skillsContainer.innerHTML = skillSet.map(skill =>
+                            `<span class="badge badge-info">${escapeHtml(skill)}</span>`
+                        ).join('');
+                    } else {
+                        skillsContainer.innerHTML = '<span style="color: #888; font-size: 0.9rem;">No skills extracted yet from your uploaded resumes.</span>';
+                    }
+
+                    container.innerHTML = data.resumes.map(r => {
+                        const date = new Date(r.upload_timestamp).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                        });
+                        const sizeKB = (r.file_size / 1024).toFixed(1);
+                        const extIcon = r.original_ext === '.pdf' ? 'fa-file-pdf' : 'fa-file-word';
+                        const extColor = r.original_ext === '.pdf' ? '#ef4444' : '#3b82f6';
+
+                        return `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 10px; margin-bottom: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.8rem;">
+                                <i class="fas ${extIcon}" style="font-size: 1.8rem; color: ${extColor};"></i>
+                                <div>
+                                    <p style="margin: 0; font-size: 0.9rem; font-weight: 600;">Resume${r.original_ext}</p>
+                                    <p style="margin: 0; font-size: 0.75rem; color: #888;">${sizeKB} KB • ${date} • <span style="color: ${r.visibility === 'public' ? 'var(--success-color)' : '#888'};">${r.visibility}</span></p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.4rem;">
+                                <button class="btn-small" onclick="downloadResume('${r.resume_id}')" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;"><i class="fas fa-download"></i></button>
+                                <button class="btn-small" onclick="deleteResume('${r.resume_id}')" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; border-color: var(--danger-color, #ef4444); color: var(--danger-color, #ef4444);"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    skillsContainer.innerHTML = '<span style="color: #888; font-size: 0.9rem;">Upload a resume to extract and display skills.</span>';
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: #666;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                            <p style="margin: 0;">No resumes uploaded yet.</p>
+                            <p style="margin: 0.3rem 0 0; font-size: 0.8rem;">Click "Add Resume" to upload your first one.</p>
+                        </div>`;
+                }
+            } catch (e) {
+                console.error('Failed to load resumes:', e);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function renderListSection(containerId, items, emptyMessage) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (items && items.length > 0) {
+                container.innerHTML = items.map(item =>
+                    `<div class="job-item" style="margin-top: 0.75rem;"><div><p style="margin:0; color:#ccc;">${escapeHtml(item)}</p></div></div>`
+                ).join('');
+            } else {
+                container.textContent = emptyMessage;
+            }
+        }
+
+        function downloadResume(resumeId) {
+            // High-risk action: Require OTP via virtual keyboard before download
+            VirtualKeyboard.show({
+                title: 'Verify Identity for Download',
+                subtitle: 'Enter your authenticator OTP to download this resume',
+                digits: 6,
+                onSubmit: async (code) => {
+                    try {
+                        const verifyRes = await fetch('/api/v1/admin/otp/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ totp_code: code, action: 'resume_download' })
+                        });
+                        const verifyData = await verifyRes.json();
+                        if (verifyData.status === 'success') {
+                            window.open(`/api/v1/users/resumes/${resumeId}/download`, '_blank');
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (e) {
+                        return false;
+                    }
+                }
+            });
+        }
+
+        async function deleteResume(resumeId) {
+            if (!confirm('Are you sure you want to permanently delete this resume? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`/api/v1/users/resumes/${resumeId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    await loadResumes();
+                } else {
+                    alert('Delete failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Communication error.');
+            }
+        }
+
+        async function handleResumeUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const allowedTypes = ['application/pdf', 'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please upload a PDF or Word document.');
+                    input.value = '';
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('resume', file);
+
+                try {
+                    const res = await fetch('/api/v1/users/resumes', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+
+                    if (data.status === 'success') {
+                        alert(`Resume "${file.name}" uploaded securely!`);
+                        await loadResumes(); // Refresh the list
+                    } else {
+                        alert('Upload failed: ' + data.message);
+                    }
+                } catch (e) {
+                    alert('Communication error with server.');
+                }
+
+                input.value = '';
+            }
+        }
+
+        async function handleLogout() {
+            await fetch('/api/v1/auth/logout', { method: 'POST' });
+            window.location.href = 'auth.html';
+        }
+
+        async function updatePrivacy(value) {
+            const statusEl = document.getElementById('privacy-save-status');
+            statusEl.textContent = 'Saving...';
+            statusEl.style.color = 'var(--primary-color)';
+            try {
+                const res = await fetch('/api/v1/users/me/privacy', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ privacy_profile: value })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    statusEl.textContent = '✓ Saved';
+                    statusEl.style.color = 'var(--success-color)';
+                } else {
+                    statusEl.textContent = 'Failed to save';
+                    statusEl.style.color = 'var(--danger-color, #ef4444)';
+                }
+            } catch (e) {
+                statusEl.textContent = 'Error saving';
+                statusEl.style.color = 'var(--danger-color, #ef4444)';
+            }
+            setTimeout(() => { statusEl.textContent = 'Controls who can see your full profile details.'; statusEl.style.color = '#888'; }, 2000);
+        }
+
+        async function updateShowViews(checked) {
+            try {
+                await fetch('/api/v1/users/me/privacy', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ show_profile_views: checked })
+                });
+            } catch (e) {
+                console.error('Failed to update show_profile_views:', e);
+            }
+        }
+
+        async function loadProfileViews() {
+            try {
+                const res = await fetch('/api/v1/users/me/views');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    document.getElementById('views-count').innerHTML =
+                        `<i class="fas fa-eye"></i> ${data.views_this_week} profile view${data.views_this_week !== 1 ? 's' : ''} this week`;
+
+                    const viewersDiv = document.getElementById('recent-viewers');
+                    if (data.recent_viewers && data.recent_viewers.length > 0) {
+                        viewersDiv.innerHTML = data.recent_viewers.map(v =>
+                            `<p style="font-size: 0.8rem; color: #aaa; margin: 0.3rem 0;"><i class="fas fa-user" style="margin-right:0.3rem;"></i> ${v.name || v.viewer_email}</p>`
+                        ).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load profile views:', e);
+            }
+        }
+
+        function handlePasswordChange() {
+            const currentPwd = document.getElementById('current-password').value;
+            const newPwd = document.getElementById('new-password').value;
+            const statusEl = document.getElementById('password-change-status');
+
+            if (!currentPwd || !newPwd) {
+                statusEl.textContent = 'Both fields are required.';
+                statusEl.style.color = '#ef4444';
+                return;
+            }
+            if (newPwd.length < 8) {
+                statusEl.textContent = 'New password must be at least 8 characters.';
+                statusEl.style.color = '#ef4444';
+                return;
+            }
+
+            // High-risk action: Require OTP via virtual keyboard
+            VirtualKeyboard.show({
+                title: 'Verify Identity for Password Change',
+                subtitle: 'Enter your authenticator OTP to confirm',
+                digits: 6,
+                onSubmit: async (code) => {
+                    statusEl.textContent = 'Verifying...';
+                    statusEl.style.color = 'var(--primary-color)';
+                    try {
+                        // First verify OTP
+                        const verifyRes = await fetch('/api/v1/admin/otp/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ totp_code: code, action: 'password_change' })
+                        });
+                        const verifyData = await verifyRes.json();
+                        if (verifyData.status !== 'success') {
+                            statusEl.textContent = 'Invalid OTP.';
+                            statusEl.style.color = '#ef4444';
+                            return false;
+                        }
+
+                        // Now change the password
+                        const res = await fetch('/api/v1/users/me/password', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                current_password: currentPwd,
+                                new_password: newPwd,
+                                totp_code: code
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            statusEl.textContent = '✓ Password changed successfully!';
+                            statusEl.style.color = 'var(--success-color)';
+                            document.getElementById('current-password').value = '';
+                            document.getElementById('new-password').value = '';
+                            return true;
+                        } else {
+                            statusEl.textContent = data.message || 'Password change failed.';
+                            statusEl.style.color = '#ef4444';
+                            return false;
+                        }
+                    } catch (e) {
+                        statusEl.textContent = 'Network error.';
+                        statusEl.style.color = '#ef4444';
+                        return false;
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

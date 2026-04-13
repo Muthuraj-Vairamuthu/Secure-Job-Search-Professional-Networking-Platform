@@ -1,0 +1,9 @@
+Flask
+flask-cors
+gunicorn
+pyotp
+cryptography
+argon2-cffi
+pymupdf
+python-docx
+requests

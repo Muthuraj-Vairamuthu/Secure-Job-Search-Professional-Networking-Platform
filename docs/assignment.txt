@@ -1,0 +1,128 @@
+CSE 345/545 Foundations to Computer Security
+Course Project Requirements
+Secure Job Search & Professional Networking Platform
+1 Introduction
+The Secure Job Search and Professional Networking Platform is intended to provide end-to-end security
+for professional interactions, private messaging, resume sharing, and job application workflows. The
+goal is to build a robust system that ensures confidentiality, integrity, and availability of user data
+while integrating strong user validation mechanisms, OTP-based authentication, PKI-backed trust, and
+tamper-evident auditing.
+The platform supports user profiles, professional connections, company pages, job postings, applica-
+tion tracking, and recruiter–candidate communication. Security, privacy, and access control are first-class
+requirements throughout the system.
+2 Requirements
+Below are the key functional and security requirements for the platform.
+A. User Profiles and Connections
+• Users can create and edit profiles, including name, headline, location, education, experience, skills,
+profile picture, and bio.
+• Field-level privacy controls:
+– Public
+– Connections-only
+– Private
+• Users can send, accept, and remove professional connection requests.
+• Users can view a limited connection graph restricted to their connections.
+• Profile viewer count and recent viewers list with opt-out privacy controls.
+B. Company Pages and Job Posting
+• Recruiters can create company pages with the company name, description, location, and website.
+• Companies can post job listings with title, description, required skills, location (remote/on-site),
+salary range (optional), and application deadline.
+• Company administrators can manage job listings, view applicants, and message candidates.
+C. Job Search and Application Tracking
+• Job search by keywords, company, location, skill tags, and filters (remote, internship, full-time).
+• Users can apply to jobs by submitting a resume and a short cover note.
+• Application status tracking: Applied, Reviewed, Interviewed, Rejected, Offer.
+• Recruiters can shortlist candidates, add notes, and update application status.
+1
+D. Secure Resume Upload and Storage
+• Resume upload in PDF or DOCX format.
+• All resumes must be encrypted at rest.
+• Strict access control: only the owner, authorized recruiters, and admins may access resumes.
+• Uploaded resumes must be treated as sensitive assets.
+E. Secure Messaging
+• One-to-one and small group messaging (e.g., recruiter and candidate).
+• End-to-end encryption (E2EE) for private conversations.
+• The server must store only ciphertext for E2EE chats.
+• Optional server-side encrypted messaging for non-sensitive announcements.
+F. Authentication and Account Security
+• Secure user registration and login.
+• Email and mobile OTP verification.
+• OTP-based verification for high-risk actions.
+• Optional two-factor authentication (TOTP or simulated hardware token).
+G. Admin and Moderation
+• Admin dashboard to view and manage all users.
+• Admins can suspend or delete accounts violating platform policies.
+• Role-Based Access Control (RBAC):
+– Regular User
+– Recruiter / Company Admin
+– Platform Admin
+H. Security Mandates
+• Public Key Infrastructure (PKI)
+– All traffic must use HTTPS (TLS).
+– At least two functions must use PKI (e.g., message signing, resume integrity verification,
+company verification).
+• OTP with Virtual Keyboard
+– OTP entry via virtual keyboard for at least two high-risk actions (password reset, resume
+download, account deletion).
+• Secure Logging and Audit
+– Log all critical actions (authentication, job posting changes, application status updates, admin
+moderation).
+– Logs must be tamper-evident using hash chaining or a private blockchain.
+• Defenses Against Attacks
+– Protection against SQL injection, XSS, CSRF, session fixation, and session hijacking.
+2
+• Data Storage Compliance
+– Passwords must be hashed and salted (bcrypt or Argon2).
+– Plaintext passwords must never be stored.
+– Sensitive documents must be encrypted with strict access control.
+• Scalability and Simultaneous Access
+– The system must support multiple concurrent users without compromising security.
+3 User Roles
+A. Regular Users (Job Seekers)
+• Sign up and log in using OTP verification.
+• Manage profiles and privacy settings.
+• Upload resumes and apply for jobs.
+• Track application status.
+• Send and receive encrypted messages.
+B. Recruiter / Company Admin
+• Create and manage company pages.
+• Post and manage job listings.
+• View applicants and update application status.
+• Message candidates securely.
+C. Platform Admin
+• View, suspend, or delete user accounts.
+• Moderate content and handle reports.
+• Access secure audit logs.
+4 Programming Languages and Frameworks
+• Operating System: Ubuntu (provided VM)
+• Database: PostgreSQL (recommended) or MySQL / MongoDB with justification
+• Web Server: Nginx
+• Backend: Python (FastAPI/Django), Node.js (Express/Nest), or Java (Spring Boot)
+• Frontend: React, Vue, or server-rendered pages
+5 Milestones and Timeline (January–April)
+February Milestone 1 [No Credit] (February 13)
+• Finalize technology stack.
+• Configure HTTPS with self-signed or CA-issued certificates.
+• Deploy a skeleton application on the VM.
+3
+February Milestone 2 [2.5%] (February 27)
+• Secure user registration and login.
+• Email and mobile OTP verification.
+• User profile management.
+• Secure resume upload with encryption.
+• Basic admin dashboard.
+March Milestone [2.5%] (March 31)
+• Company pages and job postings.
+• Job search and application workflow.
+• Application status tracking.
+• Encrypted one-to-one and group messaging.
+• Initial admin logging.
+April Milestone (Final Evaluation) (April 30)
+• PKI integration for at least two security-critical functions.
+• OTP with virtual keyboard for high-risk actions.
+• Tamper-evident secure audit logs.
+• Demonstration of defenses against common web attacks.
+• Final system demo and documentation submission.
+6 Bonus
+• Blockchain-based tamper-evident logging or integrity verification: +6%
+• Resume parsing and intelligent matching: +2%
+4
