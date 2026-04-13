@@ -2,6 +2,7 @@ import os
 import sqlite3
 import hashlib
 import secrets
+import hmac
 from datetime import datetime, timezone, timedelta
 from flask import Blueprint, request, jsonify, make_response
 from core.db import DB_NAME, get_client_ip, log_action, generate_csrf_token
@@ -11,6 +12,51 @@ import auth_secTOTP as auth_sec
 auth_sec.DB_NAME = DB_NAME
 
 bp = Blueprint('auth', __name__)
+ALLOWED_SIGNUP_ROLES = {'user', 'recruiter', 'admin'}
+
+
+def _signup_signature_secret():
+    configured = os.getenv('SIGNUP_CONTEXT_SECRET', '').strip()
+    if configured:
+        return configured.encode('utf-8')
+    return auth_sec.ENCRYPTION_KEY
+
+
+def _normalize_signup_role(role):
+    role = (role or 'user').strip().lower()
+    return role if role in ALLOWED_SIGNUP_ROLES else 'user'
+
+
+def _is_admin_signup_authorized(raw_code):
+    expected_code = os.getenv('ADMIN_SIGNUP_CODE', '').strip()
+    provided_code = (raw_code or '').strip()
+    if not expected_code:
+        return False
+    return secrets.compare_digest(provided_code, expected_code)
+
+
+def _build_signup_context_signature(context):
+    payload = '|'.join([
+        context.get('email', ''),
+        context.get('password_hash', ''),
+        context.get('mfa_secret_raw', ''),
+        context.get('role', 'user'),
+        context.get('name', ''),
+        '1' if context.get('admin_signup_authorized') else '0'
+    ])
+    return hmac.new(_signup_signature_secret(), payload.encode('utf-8'), hashlib.sha256).hexdigest()
+
+
+def _is_signup_context_valid(context):
+    if not isinstance(context, dict):
+        return False
+
+    expected = _build_signup_context_signature(context)
+    provided = context.get('signup_signature', '')
+    if not provided:
+        return False
+
+    return hmac.compare_digest(provided, expected)
 
 
 def _simulate_verification_email(email, token):
@@ -34,12 +80,22 @@ def register():
     data = request.json
     email = data.get('email')
     password = data.get('password')
-    role = data.get('role', 'user')
+    role = _normalize_signup_role(data.get('role', 'user'))
+    admin_signup_code = data.get('admin_signup_code', '')
     ip = get_client_ip()
+
+    if role == 'admin' and not _is_admin_signup_authorized(admin_signup_code):
+        return jsonify({
+            "status": "error",
+            "message": "Admin signup requires a valid admin access code."
+        }), 403
+
     res = auth_sec.signup_step_1(email, password, ip)
     if res['status'] == 'pending_mfa_setup':
         res['context']['role'] = role
         res['context']['name'] = data.get('name', '')
+        res['context']['admin_signup_authorized'] = role == 'admin'
+        res['context']['signup_signature'] = _build_signup_context_signature(res['context'])
     return jsonify(res)
 
 @bp.route('/register/verify', methods=['POST'])
@@ -48,9 +104,16 @@ def register_verify():
     context = data.get('context')
     totp_code = data.get('totp_code')
     ip = get_client_ip()
+
+    if not _is_signup_context_valid(context):
+        return jsonify({"status": "error", "message": "Signup session is invalid or has been tampered with."}), 400
+
+    role = _normalize_signup_role(context.get('role', 'user'))
+    if role == 'admin' and not context.get('admin_signup_authorized'):
+        return jsonify({"status": "error", "message": "Admin signup is not authorized."}), 403
+
     res = auth_sec.signup_step_2(context, totp_code, ip)
     if res['status'] == 'success':
-        role = context.get('role', 'user')
         name = context.get('name', '')
         email = context.get('email')
         with sqlite3.connect(DB_NAME) as conn:

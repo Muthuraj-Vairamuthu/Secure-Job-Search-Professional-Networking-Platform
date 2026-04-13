@@ -60,6 +60,30 @@
         .match-high { background: rgba(16, 185, 129, 0.15); color: #10b981; }
         .match-mid { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
         .match-low { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .notes-box {
+            width: 100%;
+            margin-top: 0.8rem;
+            padding: 0.7rem 0.8rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: #fff;
+            font-family: var(--font-main);
+            resize: vertical;
+            min-height: 72px;
+        }
+        .shortlist-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.22rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            background: rgba(99, 102, 241, 0.16);
+            color: #a5b4fc;
+            margin-top: 0.45rem;
+        }
     </style>
 </head>
 
@@ -236,6 +260,7 @@
         let selectedCompanyId = null;
         let companiesData = [];
         let userRole = '';
+        let allApplicantsCache = [];
 
         // ── Init ──
         document.addEventListener('DOMContentLoaded', async () => {
@@ -374,6 +399,7 @@
                     }
                 } catch(e) { console.error(e); }
             }
+            allApplicantsCache = allApplicants;
             document.getElementById('stat-total-applicants').textContent = totalCount;
 
             if (allApplicants.length === 0) {
@@ -396,6 +422,7 @@
                             <span class="match-pill ${matchClass(a.resume_match_score)}">
                                 <i class="fas fa-bullseye"></i> ${a.resume_match_score ?? 0}% match
                             </span>
+                            ${isShortlisted(a.recruiter_notes) ? '<div class="shortlist-pill"><i class="fas fa-star"></i> Shortlisted</div>' : ''}
                             ${a.resume_id ? `
                                 <div style="margin-top:0.45rem;">
                                     <button class="btn-small" onclick="downloadApplicantResume('${a.resume_id}')" style="border-color: var(--primary-color); color: var(--primary-color);">
@@ -423,6 +450,18 @@
                             ${(a.missing_skills || []).map(s => `<span class="badge badge-danger" style="margin-right:0.3rem; margin-bottom:0.3rem;">${escapeHtml(s)}</span>`).join('')}
                         </div>
                     ` : ''}
+                    <div style="margin-top:0.85rem;">
+                        <label style="display:block; font-size:0.8rem; color:#9ca3af; margin-bottom:0.35rem;">Recruiter notes</label>
+                        <textarea id="notes-${a.id}" class="notes-box" placeholder="Add internal notes about this candidate...">${escapeHtml(cleanRecruiterNotes(a.recruiter_notes))}</textarea>
+                        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:0.7rem;">
+                            <button class="btn-small" onclick="saveApplicantNotes(${a.id})">
+                                <i class="fas fa-save"></i> Save Notes
+                            </button>
+                            <button class="btn-small" onclick="toggleShortlist(${a.id})" style="border-color: var(--secondary-color); color: var(--secondary-color);">
+                                <i class="fas fa-star"></i> ${isShortlisted(a.recruiter_notes) ? 'Remove Shortlist' : 'Shortlist'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `).join('');
         }
@@ -494,12 +533,21 @@
             selectCompany(selectedCompanyId);
         }
 
-        async function updateAppStatus(appId, newStatus) {
-            await fetch(`/api/v1/applications/${appId}/status`, {
+        async function updateAppStatus(appId, newStatus, recruiterNotes = null) {
+            const applicant = allApplicantsCache.find(a => a.id === appId);
+            const notes = recruiterNotes !== null ? recruiterNotes : getNotesValue(appId, applicant?.recruiter_notes || '');
+
+            const res = await fetch(`/api/v1/applications/${appId}/status`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify({ status: newStatus, recruiter_notes: notes })
             });
+            const data = await res.json();
+            if (data.status !== 'success') {
+                alert(data.message || 'Failed to update application');
+                return;
+            }
+            await selectCompany(selectedCompanyId);
         }
 
         async function updateCompany() {
@@ -570,6 +618,34 @@
             if ((score ?? 0) >= 75) return 'match-high';
             if ((score ?? 0) >= 40) return 'match-mid';
             return 'match-low';
+        }
+        function isShortlisted(notes) {
+            return (notes || '').includes('[SHORTLISTED]');
+        }
+        function cleanRecruiterNotes(notes) {
+            return (notes || '').replace('[SHORTLISTED]', '').trim();
+        }
+        function getNotesValue(appId, fallbackValue) {
+            const field = document.getElementById(`notes-${appId}`);
+            return field ? field.value.trim() : cleanRecruiterNotes(fallbackValue);
+        }
+        async function saveApplicantNotes(appId) {
+            const applicant = allApplicantsCache.find(a => a.id === appId);
+            if (!applicant) return;
+            const notes = composeRecruiterNotes(appId, applicant.recruiter_notes);
+            await updateAppStatus(appId, applicant.status, notes);
+        }
+        async function toggleShortlist(appId) {
+            const applicant = allApplicantsCache.find(a => a.id === appId);
+            if (!applicant) return;
+            const currentlyShortlisted = isShortlisted(applicant.recruiter_notes);
+            const notes = composeRecruiterNotes(appId, applicant.recruiter_notes, !currentlyShortlisted);
+            await updateAppStatus(appId, applicant.status, notes);
+        }
+        function composeRecruiterNotes(appId, existingNotes, forceShortlistState = null) {
+            const baseNotes = getNotesValue(appId, existingNotes);
+            const shortlisted = forceShortlistState === null ? isShortlisted(existingNotes) : forceShortlistState;
+            return shortlisted ? `[SHORTLISTED]\n${baseNotes}`.trim() : baseNotes.trim();
         }
     </script>
 </body>

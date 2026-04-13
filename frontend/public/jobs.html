@@ -76,6 +76,11 @@
                         <label><input type="checkbox" value="internship" class="filter-type"> Internship</label>
                         <label><input type="checkbox" value="contract" class="filter-type"> Contract</label>
                     </div>
+                    <div class="filter-group" style="margin-top: 1rem;">
+                        <label style="font-weight:600; color:#fff; margin-bottom:0.5rem;">Work Mode</label>
+                        <label><input type="checkbox" value="remote" class="filter-mode"> Remote</label>
+                        <label><input type="checkbox" value="onsite" class="filter-mode"> On-site</label>
+                    </div>
                     <button class="btn-small" style="width:100%; margin-top:0.5rem;" onclick="searchJobs()">Apply Filters</button>
                 </div>
 
@@ -92,12 +97,18 @@
             <div>
                 <!-- Search Bar -->
                 <div class="dashboard-card" style="margin-bottom: 1.5rem;">
-                    <div style="display: flex; gap: 1rem;">
-                        <input type="text" id="search-keyword" placeholder="Search by title, skill, or company"
-                            style="flex: 2; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
+                    <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr auto; gap: 1rem;">
+                        <input type="text" id="search-keyword" placeholder="Search by title or description"
+                            style="padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
+                            onkeydown="if(event.key==='Enter') searchJobs()">
+                        <input type="text" id="search-company" placeholder="Company"
+                            style="padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
+                            onkeydown="if(event.key==='Enter') searchJobs()">
+                        <input type="text" id="search-skill" placeholder="Skill tag"
+                            style="padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
                             onkeydown="if(event.key==='Enter') searchJobs()">
                         <input type="text" id="search-location" placeholder="Location"
-                            style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
+                            style="padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 6px; color: #fff;"
                             onkeydown="if(event.key==='Enter') searchJobs()">
                         <button class="btn-primary" style="width: auto; padding: 0 2rem;" onclick="searchJobs()">Search</button>
                     </div>
@@ -183,11 +194,15 @@
 
         async function searchJobs() {
             const keyword = document.getElementById('search-keyword').value.trim();
+            const company = document.getElementById('search-company').value.trim();
+            const skill = document.getElementById('search-skill').value.trim().toLowerCase();
             const location = document.getElementById('search-location').value.trim();
             const checkedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+            const checkedModes = Array.from(document.querySelectorAll('.filter-mode:checked')).map(cb => cb.value);
 
             let url = '/api/v1/jobs?';
             if (keyword) url += `keyword=${encodeURIComponent(keyword)}&`;
+            if (company) url += `company=${encodeURIComponent(company)}&`;
             if (location) url += `location=${encodeURIComponent(location)}&`;
             if (checkedTypes.length === 1) url += `job_type=${checkedTypes[0]}&`;
 
@@ -199,6 +214,17 @@
             let filtered = jobs;
             if (checkedTypes.length > 1) {
                 filtered = jobs.filter(j => checkedTypes.includes(j.job_type));
+            }
+            if (skill) {
+                filtered = filtered.filter(j => (j.skills || '').toLowerCase().split(',').some(s => s.trim().includes(skill)));
+            }
+            if (checkedModes.length > 0) {
+                filtered = filtered.filter(j => {
+                    const locationText = String(j.location || j.company_location || '').toLowerCase();
+                    const isRemote = locationText.includes('remote') || locationText.includes('hybrid');
+                    const isOnsite = !isRemote;
+                    return (checkedModes.includes('remote') && isRemote) || (checkedModes.includes('onsite') && isOnsite);
+                });
             }
 
             renderJobs(filtered);

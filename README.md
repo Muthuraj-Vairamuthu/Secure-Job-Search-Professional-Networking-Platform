@@ -91,6 +91,16 @@ pip install -r requirements.txt
 python3 backend/api/app.py
 ```
 
+Optional environment variables:
+
+```bash
+export ADMIN_SIGNUP_CODE="your-secret-admin-code"
+export SIGNUP_CONTEXT_SECRET="another-long-random-secret"
+```
+
+`ADMIN_SIGNUP_CODE` is required to create new admin accounts from the signup UI.
+`SIGNUP_CONTEXT_SECRET` protects the multi-step signup context from client-side tampering.
+
 The app runs at:
 
 ```text
