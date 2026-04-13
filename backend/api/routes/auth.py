@@ -29,50 +29,6 @@ def _simulate_verification_email(email, token):
         pass
 
 
-def _simulate_password_reset_email(email, token):
-    """
-    Development-only password reset delivery mock.
-    Writes the reset token to stdout and the shared server log.
-    """
-    message = f"[SIMULATED EMAIL] Password reset token for {email}: {token}"
-    print(message, flush=True)
-
-    log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data/server.log'))
-    try:
-        with open(log_path, 'a', encoding='utf-8') as log_file:
-            log_file.write(message + "\n")
-    except OSError:
-        pass
-
-
-def _find_valid_password_reset_token(conn, email, raw_token):
-    candidates = conn.execute(
-        "SELECT id, token_hash, expires_at FROM password_reset_tokens WHERE email=?",
-        (email,)
-    ).fetchall()
-
-    matched_token_id = None
-    expired_token_ids = []
-    now = datetime.now(timezone.utc)
-
-    for token_row in candidates:
-        expires_at = datetime.fromisoformat(token_row['expires_at'])
-        if now > expires_at:
-            expired_token_ids.append(token_row['id'])
-            continue
-
-        try:
-            if auth_sec.ph.verify(token_row['token_hash'], raw_token):
-                matched_token_id = token_row['id']
-                break
-        except Exception:
-            continue
-
-    for token_id in expired_token_ids:
-        conn.execute("DELETE FROM password_reset_tokens WHERE id=?", (token_id,))
-
-    return matched_token_id
-
 @bp.route('/register', methods=['POST'])
 def register():
     data = request.json
@@ -123,55 +79,16 @@ def verify_email():
     return jsonify(res), (200 if res.get('status') == 'success' else 400)
 
 
-@bp.route('/forgot-password/request', methods=['POST'])
-def forgot_password_request():
-    data = request.json or {}
-    email = data.get('email', '').strip()
-    ip = get_client_ip()
-
-    generic_response = {
-        "status": "success",
-        "message": "If that account exists, a password reset token has been sent to the simulated delivery log."
-    }
-
-    if not email or len(email) > 255:
-        return jsonify(generic_response)
-
-    with sqlite3.connect(DB_NAME) as conn:
-        conn.row_factory = sqlite3.Row
-        user = conn.execute(
-            "SELECT email, is_verified, mfa_enabled, mfa_secret FROM users WHERE email=?",
-            (email,)
-        ).fetchone()
-
-        if user and user['is_verified'] and user['mfa_enabled'] and user['mfa_secret']:
-            raw_token = secrets.token_urlsafe(32)
-            expiry = datetime.now(timezone.utc) + timedelta(minutes=15)
-
-            conn.execute("DELETE FROM password_reset_tokens WHERE email=?", (email,))
-            conn.execute(
-                "INSERT INTO password_reset_tokens (email, token_hash, expires_at) VALUES (?, ?, ?)",
-                (email, auth_sec.ph.hash(raw_token), expiry.isoformat())
-            )
-            conn.commit()
-
-            _simulate_password_reset_email(email, raw_token)
-            log_action(email, "PASSWORD_RESET_REQUESTED")
-
-    return jsonify(generic_response)
-
-
 @bp.route('/forgot-password/reset', methods=['POST'])
 def forgot_password_reset():
     data = request.json or {}
     email = data.get('email', '').strip()
-    reset_token = data.get('token', '').strip()
     totp_code = data.get('totp_code', '').strip()
     new_password = data.get('new_password', '')
     ip = get_client_ip()
 
-    if not email or not reset_token or not totp_code or not new_password:
-        return jsonify({"status": "error", "message": "Email, reset token, authenticator code, and new password are required."}), 400
+    if not email or not totp_code or not new_password:
+        return jsonify({"status": "error", "message": "Email, authenticator code, and new password are required."}), 400
 
     if len(email) > 255 or len(new_password) > 128:
         return jsonify({"status": "error", "message": "Invalid password reset request."}), 400
@@ -188,11 +105,7 @@ def forgot_password_reset():
         ).fetchone()
 
         if not user or not user['mfa_enabled'] or not user['mfa_secret']:
-            return jsonify({"status": "error", "message": "Invalid or expired password reset request."}), 400
-
-        matched_token_id = _find_valid_password_reset_token(conn, email, reset_token)
-        if matched_token_id is None:
-            return jsonify({"status": "error", "message": "Invalid or expired password reset token."}), 400
+            return jsonify({"status": "error", "message": "Password recovery is available only for verified accounts with an authenticator app configured."}), 400
 
         try:
             decrypted_secret = auth_sec.decrypt_data(user['mfa_secret'])
@@ -209,12 +122,11 @@ def forgot_password_reset():
             "UPDATE users SET password_hash=?, failed_attempts=0, locked_until=NULL WHERE email=?",
             (new_password_hash, email)
         )
-        conn.execute("DELETE FROM password_reset_tokens WHERE email=?", (email,))
         conn.execute("DELETE FROM sessions WHERE user_id=?", (email,))
         conn.execute("DELETE FROM mfa_pending_sessions WHERE email=?", (email,))
         conn.commit()
 
-    log_action(email, "PASSWORD_RESET_COMPLETED")
+    log_action(email, "PASSWORD_RESET_COMPLETED_VIA_TOTP")
     return jsonify({
         "status": "success",
         "message": "Password reset successful. Please log in with your new password."

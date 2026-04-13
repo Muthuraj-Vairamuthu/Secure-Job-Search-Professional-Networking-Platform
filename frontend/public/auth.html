@@ -226,47 +226,21 @@
             </form>
         </div>
 
-        <!-- ========== PASSWORD RESET STEP 1: REQUEST TOKEN ========== -->
+        <!-- ========== PASSWORD RESET: VERIFY & RESET ========== -->
         <div id="forgot-step1" class="auth-card" style="display: none;">
             <div class="step-indicator">
                 <div class="step-dot active"></div>
-                <div class="step-dot"></div>
             </div>
-            <div class="step-label">Step <span>1 of 2</span> — Recover access</div>
-            <h2>Forgot Password</h2>
+            <div class="step-label">Recovery — Authenticator reset</div>
+            <h2>Reset Password</h2>
             <button class="back-link" onclick="showLoginStep1()"><i class="fas fa-arrow-left"></i> Back</button>
             <p class="auth-note">
-                Enter your email and we will send a password reset token to the simulated delivery log for this project.
-            </p>
-            <form onsubmit="handleForgotPasswordRequest(event)">
-                <div class="form-group">
-                    <label for="forgot-email">Email</label>
-                    <input type="email" id="forgot-email" placeholder="john@example.com" required>
-                </div>
-                <button type="submit" class="btn-primary">Send Reset Token</button>
-            </form>
-        </div>
-
-        <!-- ========== PASSWORD RESET STEP 2: VERIFY & RESET ========== -->
-        <div id="forgot-step2" class="auth-card" style="display: none;">
-            <div class="step-indicator">
-                <div class="step-dot"></div>
-                <div class="step-dot active"></div>
-            </div>
-            <div class="step-label">Step <span>2 of 2</span> — Verify and reset</div>
-            <h2>Reset Password</h2>
-            <button class="back-link" onclick="showForgotPasswordStep1()"><i class="fas fa-arrow-left"></i> Back</button>
-            <p class="auth-note">
-                Use the reset token from the simulated delivery log and the 6-digit code from your authenticator app.
+                If you still have access to your authenticator app, you can reset your password here without email.
             </p>
             <form onsubmit="handleForgotPasswordReset(event)">
                 <div class="form-group">
-                    <label for="forgot-email-confirm">Email</label>
-                    <input type="email" id="forgot-email-confirm" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="forgot-reset-token">Reset Token</label>
-                    <input type="text" id="forgot-reset-token" placeholder="Paste the reset token" required>
+                    <label for="forgot-email">Email</label>
+                    <input type="email" id="forgot-email" placeholder="john@example.com" required>
                 </div>
                 <div class="form-group">
                     <label for="forgot-totp">Authenticator Code</label>
@@ -372,7 +346,6 @@
     <script>
         let currentMfaToken = null;
         let signupContext = null;
-        let forgotPasswordEmail = '';
         const PASSWORD_SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
 
         function getPasswordRequirementErrors(password) {
@@ -408,7 +381,6 @@
             document.getElementById('login-step1').style.display = 'block';
             document.getElementById('login-step2').style.display = 'none';
             document.getElementById('forgot-step1').style.display = 'none';
-            document.getElementById('forgot-step2').style.display = 'none';
             document.getElementById('signup-step1').style.display = 'none';
             document.getElementById('signup-step2').style.display = 'none';
         }
@@ -417,7 +389,6 @@
             document.getElementById('login-step1').style.display = 'none';
             document.getElementById('login-step2').style.display = 'block';
             document.getElementById('forgot-step1').style.display = 'none';
-            document.getElementById('forgot-step2').style.display = 'none';
             document.getElementById('signup-step1').style.display = 'none';
             document.getElementById('signup-step2').style.display = 'none';
             const inputs = document.querySelectorAll('#otp-inputs input');
@@ -428,7 +399,6 @@
             document.getElementById('login-step1').style.display = 'none';
             document.getElementById('login-step2').style.display = 'none';
             document.getElementById('forgot-step1').style.display = 'block';
-            document.getElementById('forgot-step2').style.display = 'none';
             document.getElementById('signup-step1').style.display = 'none';
             document.getElementById('signup-step2').style.display = 'none';
 
@@ -437,24 +407,14 @@
             if (!emailInput.value && loginEmail) {
                 emailInput.value = loginEmail;
             }
-        }
-
-        function showForgotPasswordStep2() {
-            document.getElementById('login-step1').style.display = 'none';
-            document.getElementById('login-step2').style.display = 'none';
-            document.getElementById('forgot-step1').style.display = 'none';
-            document.getElementById('forgot-step2').style.display = 'block';
-            document.getElementById('signup-step1').style.display = 'none';
-            document.getElementById('signup-step2').style.display = 'none';
-            document.getElementById('forgot-email-confirm').value = forgotPasswordEmail;
-            document.getElementById('forgot-reset-token').focus();
+            document.getElementById('forgot-totp').value = '';
+            document.getElementById('forgot-new-password').value = '';
         }
 
         function showSignup() {
             document.getElementById('login-step1').style.display = 'none';
             document.getElementById('login-step2').style.display = 'none';
             document.getElementById('forgot-step1').style.display = 'none';
-            document.getElementById('forgot-step2').style.display = 'none';
             document.getElementById('signup-step1').style.display = 'block';
             document.getElementById('signup-step2').style.display = 'none';
         }
@@ -463,7 +423,6 @@
             document.getElementById('login-step1').style.display = 'none';
             document.getElementById('login-step2').style.display = 'none';
             document.getElementById('forgot-step1').style.display = 'none';
-            document.getElementById('forgot-step2').style.display = 'none';
             document.getElementById('signup-step1').style.display = 'none';
             document.getElementById('signup-step2').style.display = 'block';
             const inputs = document.querySelectorAll('#signup-otp-inputs input');
@@ -594,33 +553,9 @@
             });
         }
 
-        async function handleForgotPasswordRequest(e) {
-            e.preventDefault();
-            const email = document.getElementById('forgot-email').value.trim();
-            forgotPasswordEmail = email;
-
-            try {
-                const res = await fetch('/api/v1/auth/forgot-password/request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    alert('If that account exists, a reset token has been sent to the simulated delivery log. Use it together with your authenticator code to set a new password.');
-                    showForgotPasswordStep2();
-                } else {
-                    alert('Password Reset Failed: ' + data.message);
-                }
-            } catch (e) {
-                alert('Communication error with server.');
-            }
-        }
-
         async function handleForgotPasswordReset(e) {
             e.preventDefault();
-            const token = document.getElementById('forgot-reset-token').value.trim();
+            const email = document.getElementById('forgot-email').value.trim();
             const totpCode = document.getElementById('forgot-totp').value.trim();
             const newPassword = document.getElementById('forgot-new-password').value;
             const passwordErrors = getPasswordRequirementErrors(newPassword);
@@ -640,8 +575,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        email: forgotPasswordEmail,
-                        token,
+                        email,
                         totp_code: totpCode,
                         new_password: newPassword
                     })
@@ -650,7 +584,6 @@
 
                 if (data.status === 'success') {
                     alert('Password reset successful. You can now log in with your new password.');
-                    document.getElementById('forgot-reset-token').value = '';
                     document.getElementById('forgot-totp').value = '';
                     document.getElementById('forgot-new-password').value = '';
                     document.getElementById('password').value = '';
