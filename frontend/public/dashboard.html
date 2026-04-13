@@ -12,6 +12,210 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
         integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .feed-composer {
+            margin-bottom: 2rem;
+        }
+
+        .feed-composer-row {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .feed-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .feed-composer textarea {
+            min-height: 108px;
+            resize: vertical;
+            border-radius: 18px;
+            padding: 1rem 1.1rem;
+        }
+
+        .feed-composer-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .feed-helper-text {
+            font-size: 0.85rem;
+            color: #8f8f98;
+        }
+
+        .post-button {
+            width: auto;
+            padding: 0.75rem 1.4rem;
+            border-radius: 999px;
+        }
+
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .feed-post {
+            overflow: hidden;
+        }
+
+        .feed-post-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .feed-post-author {
+            display: flex;
+            gap: 0.85rem;
+            align-items: flex-start;
+        }
+
+        .feed-post-author img {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .feed-post-meta h4 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.05rem;
+        }
+
+        .feed-post-meta p {
+            margin: 0.15rem 0 0 0;
+            font-size: 0.82rem;
+            color: #8b8b95;
+        }
+
+        .feed-post-body {
+            margin-bottom: 1rem;
+            color: #e7e7ee;
+        }
+
+        .feed-post-highlight {
+            margin-top: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(236, 72, 153, 0.1));
+            color: #f6f4ff;
+        }
+
+        .feed-post-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 0.9rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.85rem;
+            color: #9a9aa6;
+        }
+
+        .feed-post-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+        }
+
+        .feed-action {
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.02);
+            color: #cfcfe6;
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            cursor: pointer;
+            font: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .feed-action:hover,
+        .feed-action.active {
+            border-color: rgba(99, 102, 241, 0.45);
+            color: #fff;
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .feed-comments {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .feed-comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .feed-comment {
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .feed-comment strong {
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .feed-comment p {
+            margin: 0.2rem 0 0 0;
+            font-size: 0.92rem;
+            color: #d7d7de;
+        }
+
+        .feed-comment-form {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .feed-comment-form input {
+            flex: 1;
+            padding: 0.8rem 0.95rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: #fff;
+            font-family: var(--font-main);
+        }
+
+        .feed-comment-form button {
+            width: auto;
+            padding: 0.8rem 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .feed-composer-row,
+            .feed-comment-form,
+            .feed-composer-footer,
+            .feed-post-actions,
+            .feed-post-stats {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .feed-composer-footer {
+                gap: 0.8rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -37,48 +241,21 @@
         <div class="dashboard-grid" style="grid-template-columns: 3fr 1fr; margin-top: 0;">
             <!-- Main Feed -->
             <div class="feed">
-                <!-- Share Box -->
-                <div class="dashboard-card" style="margin-bottom: 2rem;">
-                    <div style="display: flex; gap: 1rem; align-items: center;">
-                        <img id="sharebox-avatar" src="https://ui-avatars.com/api/?name=User&background=random" alt="Profile"
-                            style="width: 48px; height: 48px; border-radius: 50%;">
-                        <input type="text" placeholder="Start a post..."
-                            style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); border-radius: 30px; color: #fff;">
+                <div class="dashboard-card feed-composer">
+                    <div class="feed-composer-row">
+                        <img id="sharebox-avatar" class="feed-avatar" src="https://ui-avatars.com/api/?name=User&background=random"
+                            alt="Profile">
+                        <div style="flex: 1;">
+                            <textarea id="post-input" placeholder="Share an update, hiring note, or quick win with your network..."></textarea>
+                        </div>
                     </div>
-                    <div
-                        style="display: flex; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
-                        <button class="btn-small"><i class="fas fa-image"></i> Media</button>
-                        <button class="btn-small"><i class="fas fa-calendar"></i> Event</button>
-                        <button class="btn-small"><i class="fas fa-newspaper"></i> Write article</button>
+                    <div class="feed-composer-footer">
+                        <span class="feed-helper-text">Quick posts only for now. Your post appears at the top of the feed.</span>
+                        <button id="post-submit" class="btn-primary post-button" type="button">Post</button>
                     </div>
                 </div>
 
-                <!-- Feed Item 1 -->
-                <div class="dashboard-card" style="margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                        <div style="display: flex; gap: 0.8rem;">
-                            <img src="https://ui-avatars.com/api/?name=Tech+Corp&background=0D8ABC&color=fff"
-                                alt="Company" style="width: 40px; height: 40px; border-radius: 6px;">
-                            <div>
-                                <h4 style="margin: 0;">Tech Corp <i class="fas fa-check-circle"
-                                        style="color: var(--primary-color); font-size: 0.8rem;"></i></h4>
-                                <p style="font-size: 0.8rem; color: #888;">2 hours ago • Public</p>
-                            </div>
-                        </div>
-                        <i class="fas fa-ellipsis-h" style="color: #888; cursor: pointer;"></i>
-                    </div>
-                    <p>We are excited to announce our new remote-first policy! Check out our careers page for open
-                        roles.</p>
-                    <div
-                        style="margin-top: 1rem; height: 200px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #888;">
-                        [Image Placeholder]
-                    </div>
-                    <div style="margin-top: 1rem; display: flex; gap: 2rem; color: #888; font-size: 0.9rem;">
-                        <span><i class="far fa-thumbs-up"></i> Like</span>
-                        <span><i class="far fa-comment"></i> Comment</span>
-                        <span><i class="fas fa-share"></i> Share</span>
-                    </div>
-                </div>
+                <div id="feed-list" class="feed-list"></div>
             </div>
 
             <!-- Sidebar -->
@@ -119,6 +296,63 @@
 
     <script src="../js/script.js"></script>
     <script>
+        const seededPosts = [
+            {
+                id: 'corp-1',
+                author: 'Tech Corp',
+                role: 'Enterprise Software',
+                time: '2 hours ago',
+                visibility: 'Public',
+                text: 'We are expanding our platform engineering team after a strong quarter. If you enjoy building reliable systems at scale, we would love to connect.',
+                highlight: 'Hiring now for backend, DevOps, and security roles across hybrid teams.',
+                likes: 24,
+                liked: false,
+                commentsOpen: false,
+                comments: [
+                    { author: 'Nina Shah', text: 'Love seeing infra roles highlighted. Sending this to a friend.' },
+                    { author: 'Raj Mehta', text: 'The reliability work here looks really interesting.' }
+                ]
+            },
+            {
+                id: 'corp-2',
+                author: 'Northstar Logistics',
+                role: 'Supply Chain Innovation',
+                time: '5 hours ago',
+                visibility: 'Public',
+                text: 'Our graduate operations program opens this week. We are looking for people who like solving messy real-world problems with data and teamwork.',
+                highlight: 'Applications close Friday. Rotations include analytics, warehouse tech, and network planning.',
+                likes: 17,
+                liked: false,
+                commentsOpen: false,
+                comments: [
+                    { author: 'Aisha Khan', text: 'This is a great path for fresh grads.' }
+                ]
+            },
+            {
+                id: 'corp-3',
+                author: 'BluePeak Health',
+                role: 'Digital Care',
+                time: 'Yesterday',
+                visibility: 'Public',
+                text: 'We just shipped a patient messaging update that reduced average response time by 28%. Proud of the team behind the rollout.',
+                highlight: 'Product, QA, and customer success collaborated on this release.',
+                likes: 31,
+                liked: false,
+                commentsOpen: false,
+                comments: [
+                    { author: 'Kevin Dsouza', text: 'That response-time improvement is huge.' },
+                    { author: 'Maya Iyer', text: 'Cross-functional launches like this are always the hardest.' }
+                ]
+            }
+        ];
+
+        let currentUser = {
+            name: 'You',
+            role: 'Professional',
+            avatarUrl: 'https://ui-avatars.com/api/?name=You&background=6366f1&color=fff&size=128'
+        };
+        let feedPosts = [];
+
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const [profileRes, viewsRes, connectionsRes, resumesRes] = await Promise.all([
@@ -142,6 +376,11 @@
                     const name = profile.name || profile.email || 'User';
                     const headline = profile.headline || (profile.role === 'recruiter' ? 'Recruiter / Employer' : 'Job Seeker');
                     const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=128`;
+                    currentUser = {
+                        name,
+                        role: headline,
+                        avatarUrl
+                    };
 
                     document.getElementById('sharebox-avatar').src = avatarUrl;
                     document.getElementById('dashboard-profile-avatar').src = avatarUrl;
@@ -171,16 +410,188 @@
                 } else {
                     recentList.innerHTML = '<li>Upload a resume to populate recent skills.</li>';
                 }
+
+                initializeFeed();
             } catch (e) {
                 console.error('Failed to load dashboard profile summary:', e);
+                initializeFeed();
             }
         });
+
+        function initializeFeed() {
+            if (feedPosts.length > 0) return;
+
+            const storedPosts = loadStoredPosts();
+            feedPosts = [...storedPosts, ...seededPosts];
+            renderFeed();
+
+            const postButton = document.getElementById('post-submit');
+            const postInput = document.getElementById('post-input');
+            postButton.addEventListener('click', submitPost);
+            postInput.addEventListener('keydown', (event) => {
+                if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                    submitPost();
+                }
+            });
+        }
+
+        function loadStoredPosts() {
+            try {
+                const saved = localStorage.getItem('dashboardPosts');
+                const parsed = saved ? JSON.parse(saved) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn('Could not load saved posts:', error);
+                return [];
+            }
+        }
+
+        function saveUserPosts() {
+            const userPosts = feedPosts.filter(post => post.isUserPost);
+            localStorage.setItem('dashboardPosts', JSON.stringify(userPosts));
+        }
+
+        function submitPost() {
+            const input = document.getElementById('post-input');
+            const text = input.value.trim();
+
+            if (!text) {
+                alert('Write a short update before posting.');
+                return;
+            }
+
+            const newPost = {
+                id: `user-${Date.now()}`,
+                author: currentUser.name,
+                role: currentUser.role,
+                time: 'Just now',
+                visibility: 'Connections',
+                text,
+                highlight: '',
+                likes: 0,
+                liked: false,
+                commentsOpen: false,
+                comments: [],
+                isUserPost: true
+            };
+
+            feedPosts.unshift(newPost);
+            input.value = '';
+            saveUserPosts();
+            renderFeed();
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('feed-list');
+            container.innerHTML = feedPosts.map(post => {
+                const avatarBackground = post.isUserPost ? '6366f1' : post.id === 'corp-2' ? '0f766e' : post.id === 'corp-3' ? 'be185d' : '0D8ABC';
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author)}&background=${avatarBackground}&color=fff&size=128`;
+                const commentCount = post.comments.length;
+
+                return `
+                    <article class="dashboard-card feed-post" data-post-id="${post.id}">
+                        <div class="feed-post-header">
+                            <div class="feed-post-author">
+                                <img src="${avatarUrl}" alt="${escapeHtml(post.author)}">
+                                <div class="feed-post-meta">
+                                    <h4>${escapeHtml(post.author)} ${post.isUserPost ? '' : '<i class="fas fa-check-circle" style="color: var(--primary-color); font-size: 0.8rem;"></i>'}</h4>
+                                    <p>${escapeHtml(post.role)} · ${escapeHtml(post.time)} · ${escapeHtml(post.visibility)}</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-ellipsis-h" style="color: #888; cursor: pointer;"></i>
+                        </div>
+                        <div class="feed-post-body">
+                            <p>${escapeHtml(post.text)}</p>
+                            ${post.highlight ? `<div class="feed-post-highlight">${escapeHtml(post.highlight)}</div>` : ''}
+                        </div>
+                        <div class="feed-post-stats">
+                            <span>${post.likes} like${post.likes === 1 ? '' : 's'}</span>
+                            <span>${commentCount} comment${commentCount === 1 ? '' : 's'}</span>
+                        </div>
+                        <div class="feed-post-actions">
+                            <button class="feed-action ${post.liked ? 'active' : ''}" type="button" onclick="toggleLike('${post.id}')">
+                                <i class="${post.liked ? 'fas' : 'far'} fa-thumbs-up"></i> ${post.liked ? 'Liked' : 'Like'}
+                            </button>
+                            <button class="feed-action ${post.commentsOpen ? 'active' : ''}" type="button" onclick="toggleComments('${post.id}')">
+                                <i class="far fa-comment"></i> Comment
+                            </button>
+                        </div>
+                        ${post.commentsOpen ? renderComments(post) : ''}
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function renderComments(post) {
+            const commentsMarkup = post.comments.length
+                ? post.comments.map(comment => `
+                    <div class="feed-comment">
+                        <strong>${escapeHtml(comment.author)}</strong>
+                        <p>${escapeHtml(comment.text)}</p>
+                    </div>
+                `).join('')
+                : '<div class="feed-comment"><strong>No comments yet</strong><p>Start the conversation on this update.</p></div>';
+
+            return `
+                <div class="feed-comments">
+                    <div class="feed-comments-list">${commentsMarkup}</div>
+                    <form class="feed-comment-form" onsubmit="addComment(event, '${post.id}')">
+                        <input type="text" name="comment" placeholder="Add a comment..." maxlength="220" required>
+                        <button class="btn-primary" type="submit">Comment</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function toggleLike(postId) {
+            const post = feedPosts.find(item => item.id === postId);
+            if (!post) return;
+
+            post.liked = !post.liked;
+            post.likes += post.liked ? 1 : -1;
+            if (post.likes < 0) post.likes = 0;
+
+            saveUserPosts();
+            renderFeed();
+        }
+
+        function toggleComments(postId) {
+            const post = feedPosts.find(item => item.id === postId);
+            if (!post) return;
+
+            post.commentsOpen = !post.commentsOpen;
+            renderFeed();
+        }
+
+        function addComment(event, postId) {
+            event.preventDefault();
+            const form = event.target;
+            const input = form.elements.comment;
+            const text = input.value.trim();
+            if (!text) return;
+
+            const post = feedPosts.find(item => item.id === postId);
+            if (!post) return;
+
+            post.comments.push({
+                author: currentUser.name,
+                text
+            });
+
+            input.value = '';
+            saveUserPosts();
+            renderFeed();
+        }
 
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text || '';
             return div.innerHTML;
         }
+
+        window.toggleLike = toggleLike;
+        window.toggleComments = toggleComments;
+        window.addComment = addComment;
     </script>
 </body>
 
